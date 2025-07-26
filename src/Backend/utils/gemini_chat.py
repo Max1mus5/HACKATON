@@ -6,7 +6,7 @@ from typing import Dict, Any
 class GeminiChatService:
     def __init__(self, api_key: str = None):
         # API key hardcodeada para evitar problemas de configuración
-        self.api_key = api_key or "AIzaSyAel_ApU1CspuRaeqT0Z6jc0CblthtMlbE"
+        self.api_key = api_key or "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0"
         self.model = "gemini-1.5-flash-latest"
         self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         
