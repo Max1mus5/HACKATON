@@ -529,13 +529,13 @@ function partiallyMaskText(text, visibleStart = 4, visibleEnd = 4) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    const userInputField = document.getElementById("user-input");
-    const chatButton = document.getElementById("chat-button");
-    const chatWindow = document.getElementById("chat-window");
+    const userInputField = document.getElementById("chat-input"); // Corregido de "user-input" a "chat-input"
+    const chatButton = document.getElementById("send-btn"); // Corregido de "chat-button" a "send-btn"
+    const chatWindow = document.getElementById("messages-container"); // Corregido para usar el contenedor correcto
     const micButton = document.getElementById("mic-button");
     
     // Elementos para el modal de configuración
-    const settingsButton = document.getElementById("settings-button");
+    const settingsButton = document.getElementById("settings-nav"); // Corregido para usar el nav de configuración
     const settingsModal = document.getElementById("settings-modal");
     const closeModalButton = document.querySelector(".close");
     const apiKeyInput = document.getElementById("api-key-input");
@@ -627,9 +627,14 @@ document.addEventListener("DOMContentLoaded", function() {
         const apiKey = apiKeyInput.value.trim();
         const modelName = geminiModelSelect.value;
         
+        console.log('🔧 Iniciando guardado de configuración de API...');
+        console.log('📝 API Key presente:', apiKey ? 'Sí' : 'No');
+        console.log('📝 Modelo seleccionado:', modelName);
+        
         // Guardar en localStorage
         localStorage.setItem('gemini_api_key', apiKey);
         localStorage.setItem('gemini_model', modelName);
+        console.log('💾 Configuración guardada en localStorage');
         
         // Actualizar configuración local
         config.geminiAPIKey = apiKey;
@@ -639,10 +644,10 @@ document.addEventListener("DOMContentLoaded", function() {
         // Enviar API key al backend
         if (apiKey) {
             try {
-                // Determinar la URL base del backend
-                const backendURL = window.leanBotAPI ? window.leanBotAPI.baseURL : 
-                    (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 
-                     window.location.origin : 'http://localhost:8000');
+                // Backend URL hardcodeado apuntando a Render
+                const backendURL = 'https://hackaton-d1h6.onrender.com';
+                
+                console.log('🌐 Enviando API key al backend:', backendURL);
                 
                 const response = await fetch(`${backendURL}/config/gemini_api_key`, {
                     method: 'POST',
@@ -654,63 +659,123 @@ document.addEventListener("DOMContentLoaded", function() {
                     })
                 });
                 
+                console.log('📡 Respuesta del backend - Status:', response.status);
+                
                 if (response.ok) {
                     const result = await response.json();
-                    console.log('✅ API key enviada al backend:', result.message);
+                    console.log('✅ API key enviada al backend exitosamente:', result);
                     
                     // Mostrar mensaje de éxito en el modal
-                    apiTestResult.innerHTML = "✅ Configuración guardada y enviada al backend correctamente.";
+                    apiTestResult.innerHTML = `
+                        <div style="color: green; font-weight: bold;">
+                            ✅ Configuración guardada y enviada al backend correctamente
+                        </div>
+                        <div style="font-size: 0.9em; margin-top: 5px;">
+                            Backend URL: ${backendURL}<br>
+                            Respuesta: ${result.message}
+                        </div>
+                    `;
                     apiTestResult.className = "mt-3 success";
                     
-                    // Mostrar mensaje en el chat
-                    const botMessage = document.createElement("div");
-                    botMessage.classList.add("bot-message");
-                    botMessage.innerHTML = `
-                        <strong>🔧 Configuración Actualizada</strong><br>
-                        La API key de Gemini ha sido configurada correctamente tanto en el frontend como en el backend.<br>
-                        <small>✅ LEAN BOT ahora está completamente integrado con Gemini AI</small>
-                    `;
-                    chatWindow.appendChild(botMessage);
-                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                    // Mostrar mensaje en el chat si existe
+                    if (chatWindow) {
+                        const botMessage = document.createElement("div");
+                        botMessage.classList.add("message", "bot-message");
+                        botMessage.innerHTML = `
+                            <div class="message-avatar bot-avatar">
+                                <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+                            </div>
+                            <div class="message-content">
+                                <div class="message-text">
+                                    <strong>🔧 Configuración Actualizada</strong><br>
+                                    La API key de Gemini ha sido configurada correctamente tanto en el frontend como en el backend.<br>
+                                    <small>✅ LEAN BOT ahora está completamente integrado con Gemini AI</small>
+                                </div>
+                                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                            </div>
+                        `;
+                        chatWindow.appendChild(botMessage);
+                        chatWindow.scrollTop = chatWindow.scrollHeight;
+                    }
                 } else {
-                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                    const errorText = await response.text();
+                    console.error('❌ Error del backend:', response.status, errorText);
+                    throw new Error(`Error ${response.status}: ${errorText}`);
                 }
                 
             } catch (error) {
                 console.warn('⚠️ No se pudo enviar API key al backend:', error);
                 
                 // Mostrar mensaje de advertencia en el modal
-                apiTestResult.innerHTML = "⚠️ Configuración guardada localmente. Backend no disponible en este momento.";
+                apiTestResult.innerHTML = `
+                    <div style="color: orange; font-weight: bold;">
+                        ⚠️ Configuración guardada localmente
+                    </div>
+                    <div style="font-size: 0.9em; margin-top: 5px;">
+                        Error al conectar con backend: ${error.message}<br>
+                        La configuración está guardada y funcionará localmente.
+                    </div>
+                `;
                 apiTestResult.className = "mt-3 warning";
                 
-                // Mostrar mensaje en el chat
+                // Mostrar mensaje en el chat si existe
+                if (chatWindow) {
+                    const botMessage = document.createElement("div");
+                    botMessage.classList.add("message", "bot-message");
+                    botMessage.innerHTML = `
+                        <div class="message-avatar bot-avatar">
+                            <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                <strong>🔧 Configuración Guardada</strong><br>
+                                La API key de Gemini ha sido guardada localmente.<br>
+                                <small>ℹ️ Se intentará sincronizar con el backend cuando esté disponible</small>
+                            </div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                    chatWindow.appendChild(botMessage);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                }
+            }
+        } else {
+            // Solo guardar localmente si no hay API key
+            console.log('ℹ️ No se proporcionó API key, solo guardando configuración local');
+            apiTestResult.innerHTML = `
+                <div style="color: blue;">
+                    ℹ️ Configuración guardada localmente
+                </div>
+                <div style="font-size: 0.9em; margin-top: 5px;">
+                    No se envió API key al backend (campo vacío)
+                </div>
+            `;
+            apiTestResult.className = "mt-3 success";
+            
+            // Mostrar mensaje en el chat si existe
+            if (chatWindow) {
                 const botMessage = document.createElement("div");
-                botMessage.classList.add("bot-message");
+                botMessage.classList.add("message", "bot-message");
                 botMessage.innerHTML = `
-                    <strong>🔧 Configuración Guardada</strong><br>
-                    La API key de Gemini ha sido guardada localmente.<br>
-                    <small>ℹ️ Se intentará sincronizar con el backend cuando esté disponible</small>
+                    <div class="message-avatar bot-avatar">
+                        <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            Configuración actualizada. Para obtener mejores respuestas, considera agregar una API key de Gemini.
+                        </div>
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    </div>
                 `;
                 chatWindow.appendChild(botMessage);
                 chatWindow.scrollTop = chatWindow.scrollHeight;
             }
-        } else {
-            // Solo guardar localmente si no hay API key
-            apiTestResult.innerHTML = "Configuración guardada localmente.";
-            apiTestResult.className = "mt-3 success";
-            
-            // Mostrar mensaje en el chat
-            const botMessage = document.createElement("div");
-            botMessage.classList.add("bot-message");
-            botMessage.textContent = "Configuración actualizada. Para obtener mejores respuestas, considera agregar una API key de Gemini.";
-            chatWindow.appendChild(botMessage);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
         }
         
         // Cerrar modal después de un momento
         setTimeout(() => {
             settingsModal.style.display = "none";
-        }, 2000);
+        }, 3000); // Aumentado el tiempo para poder leer el mensaje
     }
     
     // Probar conexión con la API
@@ -718,14 +783,25 @@ document.addEventListener("DOMContentLoaded", function() {
         const apiKey = apiKeyInput.value.trim();
         const modelName = geminiModelSelect.value;
         
+        console.log('🧪 Iniciando prueba de conexión con API de Gemini...');
+        
         if (!apiKey) {
-            apiTestResult.innerHTML = "Por favor, ingresa una clave API válida.";
+            console.log('❌ No se proporcionó API key para la prueba');
+            apiTestResult.innerHTML = `
+                <div style="color: red; font-weight: bold;">
+                    ❌ Por favor, ingresa una clave API válida
+                </div>
+            `;
             apiTestResult.className = "mt-3 error";
             return;
         }
         
         // Mostrar cargando
-        apiTestResult.innerHTML = "Probando conexión...";
+        apiTestResult.innerHTML = `
+            <div style="color: blue;">
+                🔄 Probando conexión con Gemini API...
+            </div>
+        `;
         apiTestResult.className = "mt-3";
         
         // Actualizar configuración temporalmente
@@ -733,17 +809,56 @@ document.addEventListener("DOMContentLoaded", function() {
         const originalModel = config.geminiModel;
         
         try {
+            console.log('📝 Configurando API temporalmente para prueba...');
             config.geminiAPIKey = apiKey;
             config.geminiModel = modelName;
             config.apiTested = false;
             
+            // Probar API directamente
+            console.log('📡 Enviando prueba a Gemini API...');
             const success = await testGeminiAPI();
             
             if (success) {
-                apiTestResult.innerHTML = "¡Conexión exitosa! La API de Gemini está funcionando correctamente.";
+                console.log('✅ Prueba de API exitosa');
+                apiTestResult.innerHTML = `
+                    <div style="color: green; font-weight: bold;">
+                        ✅ ¡Conexión exitosa!
+                    </div>
+                    <div style="font-size: 0.9em; margin-top: 5px;">
+                        La API de Gemini está funcionando correctamente<br>
+                        Modelo: ${modelName}
+                    </div>
+                `;
                 apiTestResult.className = "mt-3 success";
+                
+                // También probar el backend si está disponible
+                if (window.leanBotAPI && window.leanBotAPI.isBackendAvailable) {
+                    try {
+                        console.log('🔄 Probando integración con backend...');
+                        const backendTest = await window.leanBotAPI.testGeminiConnection();
+                        console.log('🧪 Resultado de prueba del backend:', backendTest);
+                        
+                        if (backendTest.status === 'success') {
+                            apiTestResult.innerHTML += `
+                                <div style="color: green; margin-top: 10px;">
+                                    🤖 Backend también confirmó conexión exitosa
+                                </div>
+                            `;
+                        }
+                    } catch (backendError) {
+                        console.warn('⚠️ Error al probar backend:', backendError);
+                    }
+                }
             } else {
-                apiTestResult.innerHTML = "No se pudo conectar con la API de Gemini. Verifica tu clave API.";
+                console.log('❌ Prueba de API falló');
+                apiTestResult.innerHTML = `
+                    <div style="color: red; font-weight: bold;">
+                        ❌ No se pudo conectar con la API de Gemini
+                    </div>
+                    <div style="font-size: 0.9em; margin-top: 5px;">
+                        Verifica que tu clave API sea válida y tenga permisos para el modelo ${modelName}
+                    </div>
+                `;
                 apiTestResult.className = "mt-3 error";
                 
                 // Restaurar configuración original si la prueba falla
@@ -751,8 +866,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 config.geminiModel = originalModel;
             }
         } catch (error) {
-            console.error("Error al probar API:", error);
-            apiTestResult.innerHTML = "Error al probar la conexión: " + error.message;
+            console.error("❌ Error durante la prueba de API:", error);
+            apiTestResult.innerHTML = `
+                <div style="color: red; font-weight: bold;">
+                    ❌ Error al probar la conexión
+                </div>
+                <div style="font-size: 0.9em; margin-top: 5px;">
+                    ${error.message}
+                </div>
+            `;
             apiTestResult.className = "mt-3 error";
             
             // Restaurar configuración original si hay un error

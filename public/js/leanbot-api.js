@@ -11,12 +11,10 @@ class LeanBotAPI {
 
     // Detectar la URL base según el entorno
     getBaseURL() {
-        // En producción (Vercel), usar la URL actual sin puerto
-        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-            return window.location.origin;
-        }
-        // En desarrollo local, usar localhost:8000
-        return 'http://localhost:8000';
+        // Backend URL hardcodeado apuntando a Render
+        const baseURL = 'https://hackaton-d1h6.onrender.com';
+        console.log('🌐 Usando BASE_URL hardcodeado:', baseURL);
+        return baseURL;
     }
 
     // Generar o recuperar ID de usuario único

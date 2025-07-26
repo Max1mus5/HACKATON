@@ -153,6 +153,7 @@
     </div>
 
     <!-- Scripts -->
+    <script src="js/env-config.js"></script>
     <script src="js/login.js"></script>
     <script src="js/config.js"></script>
     <script src="js/leanbot-api.js"></script>
@@ -231,7 +232,7 @@
                 try {
                     console.log(`Cargando contexto del chat para usuario: ${this.sessionData.doc_id}`);
                     
-                    const response = await fetch(`http://localhost:8000/usuarios/${this.sessionData.doc_id}`, {
+                    const response = await fetch(`https://hackaton-d1h6.onrender.com/usuarios/${this.sessionData.doc_id}`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
@@ -597,7 +598,7 @@
                             score: null
                         };
 
-                        await fetch(`http://localhost:8000/chats/${this.sessionData.chat_id}`, {
+                        await fetch(`https://hackaton-d1h6.onrender.com/chats/${this.sessionData.chat_id}`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json'

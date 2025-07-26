@@ -209,7 +209,7 @@ handleLogin() {
     const originalText = this.showLoading();
 
     // Llamar a la API de FastAPI
-    fetch("http://localhost:8000/usuarios/", {
+    fetch("https://hackaton-d1h6.onrender.com/usuarios/", {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -329,7 +329,7 @@ window.LoginManager = LoginManager;
 window.testApiConnection = async function() {
     try {
         console.log('Probando conexión con la API...');
-        const response = await fetch('http://localhost:8000/');
+        const response = await fetch('https://hackaton-d1h6.onrender.com/');
         const data = await response.json();
         console.log('✅ API conectada:', data);
         return data;
@@ -339,9 +339,7 @@ window.testApiConnection = async function() {
     }
 };
 
-// Test connection when page loads (only in development)
-if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    setTimeout(() => {
-        testApiConnection();
-    }, 1000);
-}
+// Test connection when page loads
+setTimeout(() => {
+    testApiConnection();
+}, 1000);
