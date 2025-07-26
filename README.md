@@ -155,7 +155,7 @@ pip install -r requirements.txt
 ### **2. Configuración de API**
 ```bash
 # La API Key ya está configurada por defecto
-# GEMINI_API_KEY=AIzaSyAel_ApU1CspuRaeqT0Z6jc0CblthtMlbE
+# GEMINI_API_KEY=AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0
 ```
 
 ### **3. Iniciar el Sistema**

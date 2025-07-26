@@ -66,12 +66,153 @@ async function loadChatHistory() {
                 chatWindow.scrollTop = chatWindow.scrollHeight;
                 console.log(`✅ Historial cargado: ${chatHistory.length} conversaciones`);
             } else {
-                console.log('📋 No hay historial previo');
+                console.log('📋 No hay historial previo - Mostrando mensaje de bienvenida');
+                await showWelcomeMessage();
             }
         } catch (error) {
             console.error('❌ Error al cargar historial:', error);
+            // Si hay error al cargar historial, mostrar mensaje de bienvenida
+            await showWelcomeMessage();
         }
     }
+}
+
+// Función para mostrar mensaje de bienvenida con preguntas aleatorias
+async function showWelcomeMessage() {
+    const chatWindow = document.getElementById("messages-container");
+    
+    // Asegurar que el corpus esté cargado
+    if (!corpus) {
+        await loadCorpus();
+    }
+    
+    // Mensaje de bienvenida del bot
+    const welcomeMessage = document.createElement("div");
+    welcomeMessage.classList.add("message", "bot-message");
+    welcomeMessage.innerHTML = `
+        <div class="message-avatar bot-avatar">
+            <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+        </div>
+        <div class="message-content">
+            <div class="message-text">
+                ¡Hola! 👋 Soy <strong>LEAN BOT</strong>, tu asistente virtual de <strong>INGE LEAN</strong>.<br><br>
+                Estoy aquí para ayudarte con preguntas sobre nuestros servicios de consultoría en ingeniería, desarrollo de software y soluciones tecnológicas.<br><br>
+                <strong>¿En qué puedo ayudarte hoy?</strong>
+            </div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+        </div>
+    `;
+    chatWindow.appendChild(welcomeMessage);
+    
+    // Obtener 3 preguntas aleatorias excluyendo las de comentarios
+    const validQuestions = corpus.faq.filter(item => 
+        item.question && 
+        item.answer && 
+        !item.question.includes('Felicitaciones') &&
+        !item.question.includes('comentarios')
+    );
+    
+    const randomQuestions = getRandomQuestions(validQuestions, 3);
+    const emojis = ['🤔', '💡', '❓'];
+    
+    // Mensaje con opciones
+    const optionsMessage = document.createElement("div");
+    optionsMessage.classList.add("message", "bot-message");
+    optionsMessage.innerHTML = `
+        <div class="message-avatar bot-avatar">
+            <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+        </div>
+        <div class="message-content">
+            <div class="message-text">
+                <p><strong>Aquí tienes algunas preguntas populares:</strong></p>
+                <div class="quick-options" id="welcome-options">
+                    ${randomQuestions.map((q, index) => `
+                        <button class="option-btn" data-question="${q.question}" data-number="${index + 1}">
+                            ${index + 1}. ${emojis[index]} ${q.question.replace(/^\d+\.\s*/, '')}
+                        </button>
+                    `).join('')}
+                </div>
+                <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
+                    💬 También puedes escribir tu propia pregunta o simplemente escribir el número (1, 2, o 3)
+                </p>
+            </div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+        </div>
+    `;
+    chatWindow.appendChild(optionsMessage);
+    
+    // Agregar event listeners a los botones de opciones
+    document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const question = e.target.getAttribute('data-question');
+            handleQuestionClick(question, randomQuestions);
+        });
+    });
+    
+    // Guardar las preguntas numeradas para manejo posterior
+    window.currentWelcomeQuestions = randomQuestions;
+    
+    // Desplazarse al final
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// Función para obtener preguntas aleatorias
+function getRandomQuestions(questions, count = 3) {
+    const shuffled = [...questions].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, count);
+}
+
+// Función para manejar clicks en preguntas predeterminadas
+async function handleQuestionClick(question, questionsArray) {
+    const chatWindow = document.getElementById("messages-container");
+    const userInputField = document.getElementById("chat-input");
+    
+    // Remover opciones de bienvenida
+    const welcomeOptions = document.getElementById('welcome-options');
+    if (welcomeOptions) {
+        welcomeOptions.parentElement.parentElement.parentElement.remove();
+    }
+    
+    // Limpiar el texto de numeración
+    const cleanQuestion = question.replace(/^\d+\.\s*/, '');
+    
+    // Mostrar mensaje del usuario
+    const userMessage = document.createElement("div");
+    userMessage.classList.add("message", "user-message");
+    userMessage.innerHTML = `
+        <div class="message-avatar user-avatar">
+            <span>U</span>
+        </div>
+        <div class="message-content">
+            <div class="message-text">${cleanQuestion}</div>
+            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+        </div>
+    `;
+    chatWindow.appendChild(userMessage);
+    
+    // Buscar la respuesta correspondiente
+    const selectedQuestion = questionsArray.find(q => q.question === question);
+    const answer = selectedQuestion ? selectedQuestion.answer : "Gracias por tu pregunta. Te ayudo con eso.";
+    
+    // Mostrar respuesta del bot después de un breve delay
+    setTimeout(() => {
+        const botMessage = document.createElement("div");
+        botMessage.classList.add("message", "bot-message");
+        botMessage.innerHTML = `
+            <div class="message-avatar bot-avatar">
+                <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+            </div>
+            <div class="message-content">
+                <div class="message-text">${answer}</div>
+                <div class="message-time">${new Date().toLocaleTimeString()}</div>
+            </div>
+        `;
+        chatWindow.appendChild(botMessage);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }, 1000);
+    
+    // Limpiar las preguntas guardadas
+    window.currentWelcomeQuestions = null;
 }
 
 // Cargar la clave API desde localStorage si existe
@@ -951,6 +1092,21 @@ document.addEventListener("DOMContentLoaded", function() {
     async function sendMessage() {
         const userInput = userInputField.value.trim();
         if (userInput) {
+            // Verificar si es un número y hay preguntas predeterminadas disponibles
+            if (window.currentWelcomeQuestions && /^[1-3]$/.test(userInput)) {
+                const questionIndex = parseInt(userInput) - 1;
+                if (questionIndex >= 0 && questionIndex < window.currentWelcomeQuestions.length) {
+                    const selectedQuestion = window.currentWelcomeQuestions[questionIndex];
+                    
+                    // Limpiar el input
+                    userInputField.value = '';
+                    
+                    // Manejar la pregunta seleccionada
+                    await handleQuestionClick(selectedQuestion.question, window.currentWelcomeQuestions);
+                    return;
+                }
+            }
+            
             // Si LEAN BOT está disponible, usar solo el backend
             if (window.leanBotAPI && window.leanBotAPI.isBackendAvailable) {
                 // Mostrar mensaje del usuario inmediatamente con estilos correctos

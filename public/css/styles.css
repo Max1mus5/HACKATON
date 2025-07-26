@@ -454,6 +454,13 @@ html, body {
     margin: 0 auto;
 }
 
+.quick-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin: var(--spacing-md) 0;
+}
+
 .option-btn {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--taupe);
