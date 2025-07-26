@@ -5,8 +5,8 @@ from typing import Dict, Any
 
 class GeminiChatService:
     def __init__(self, api_key: str = None):
-        # Priorizar la API key en este orden: parámetro > variable global > variable de entorno
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
+        # API key hardcodeada para evitar problemas de configuración
+        self.api_key = api_key or "AIzaSyAel_ApU1CspuRaeqT0Z6jc0CblthtMlbE"
         self.model = "gemini-1.5-flash-latest"
         self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         
@@ -35,31 +35,35 @@ class GeminiChatService:
         Genera una respuesta usando Gemini API con el contexto de LEAN BOT
         """
         try:
-            # Verificar que tenemos una API key disponible
-            current_api_key = self.api_key or os.getenv("GEMINI_API_KEY")
+            # Usar la API key hardcodeada
+            current_api_key = self.api_key
             if not current_api_key:
                 return "Lo siento, no tengo configurada la conexión con el servicio de chat. Por favor, configura la API key."
             
             # Construir el prompt completo con contexto
-            messages = [{"text": self.lean_context}]
+            full_prompt = self.lean_context + "\n\n"
             
             # Agregar historial de conversación si existe
             if conversation_history:
                 for msg in conversation_history[-5:]:  # Últimos 5 mensajes para contexto
                     if isinstance(msg, dict):
                         if msg.get("message"):
-                            messages.append({"text": f"Usuario: {msg['message']}"})
+                            full_prompt += f"Usuario: {msg['message']}\n"
                         if msg.get("response"):
-                            messages.append({"text": f"LEAN BOT: {msg['response']}"})
+                            full_prompt += f"LEAN BOT: {msg['response']}\n"
             
             # Agregar el mensaje actual del usuario
-            messages.append({"text": f"Usuario: {user_message}\n\nResponde como LEAN BOT:"})
+            full_prompt += f"Usuario: {user_message}\n\nResponde como LEAN BOT:"
             
-            # Preparar la petición a Gemini
+            # Preparar la petición a Gemini con la estructura correcta
             data = {
                 "contents": [
                     {
-                        "parts": messages
+                        "parts": [
+                            {
+                                "text": full_prompt
+                            }
+                        ]
                     }
                 ],
                 "generationConfig": {

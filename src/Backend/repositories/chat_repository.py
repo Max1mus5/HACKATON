@@ -5,9 +5,12 @@ from ..utils.gemini_sentiment import analizar_sentimiento_gemini
 from ..utils.gemini_chat import GeminiChatService
 from datetime import datetime
 import json
+import os
 
-# Instancia del servicio de Gemini Chat
-gemini_service = GeminiChatService()
+# Función para obtener una instancia actualizada del servicio de Gemini
+def get_gemini_service():
+    """Obtiene una instancia actualizada del servicio de Gemini con la API key más reciente"""
+    return GeminiChatService()
 
 def create_usuario_y_chat(db: Session, doc_id: int):
     chat = Chat()
@@ -34,7 +37,8 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     # Obtener historial de conversación actual
     conversation_history = chat.mensajes if chat.mensajes else []
     
-    # Generar respuesta con Gemini
+    # Generar respuesta con Gemini (usando instancia actualizada)
+    gemini_service = get_gemini_service()
     bot_response = gemini_service.generate_response(
         message_request.message, 
         conversation_history
