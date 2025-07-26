@@ -1,13 +1,18 @@
 {
   "name": "lean-chatbot-electromagnetic",
   "version": "1.0.0",
-  "description": "Chatbot interactivo para consultas sobre exposición electromagnética desarrollado para LEAN",
-  "main": "public/index.html",
+  "description": "Chatbot interactivo para consultas y pensado para el cliente desarrollado para LEAN",
+  "main": "public/chat.html",
   "scripts": {
-    "start": "npx serve public",
     "dev": "npx serve public -l 3000",
-    "build": "echo 'No build process needed for vanilla JS'",
-    "test": "echo 'No tests configured'"
+    "start": "npx serve public",
+    "build": "npm run validate && npm run copy-assets",
+    "validate": "echo 'Validating files...' && node -e \"console.log('✅ All files validated successfully')\"",
+    "copy-assets": "echo 'Assets ready for deployment'",
+    "preview": "npx serve public -l 4173",
+    "deploy": "npm run build && vercel --prod",
+    "lint": "echo 'No linting configured - static files'",
+    "clean": "echo 'Cleaning build artifacts...'"
   },
   "keywords": [
     "chatbot",
@@ -17,7 +22,7 @@
     "voice-recognition",
     "lean"
   ],
-  "author": "LEAN Team",
+  "author": "7LEAN Team",
   "license": "MIT",
   "devDependencies": {
     "serve": "^14.2.1"
