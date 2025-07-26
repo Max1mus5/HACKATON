@@ -199,7 +199,7 @@ class LoginManager {
                 this.saveSession(this.documento);
                 
                 // Navigate to chat
-                window.location.href = './index.html';
+                window.location.href = './chat.html';
                 
             } catch (error) {
                 console.error('Login error:', error);

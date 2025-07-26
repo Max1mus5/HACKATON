@@ -2,7 +2,7 @@
   "name": "lean-chatbot-electromagnetic",
   "version": "1.0.0",
   "description": "Chatbot interactivo para consultas y pensado para el cliente desarrollado para LEAN",
-  "main": "public/index.html",
+  "main": "public/chat.html",
   "scripts": {
     "dev": "npx serve public -l 3000",
     "start": "npx serve public",

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEAN - Chat</title>
+    <link href="css/styles.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="chat-layout">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <div class="logo-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="m2 17 10 5 10-5"/>
+                            <path d="m2 12 10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <span class="logo-text">LEAN</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="chat.html" class="nav-item active">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        <polyline points="9,22 9,12 15,12 15,22"/>
+                    </svg>
+                    <span>Chat Principal</span>
+                </a>
+                
+                <a href="admin.html" class="nav-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18 17V9"/>
+                        <path d="M13 17V5"/>
+                        <path d="M8 17v-3"/>
+                    </svg>
+                    <span>Mi Dashboard</span>
+                </a>
+                
+                <a href="#" class="nav-item" id="settings-nav">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="m12 1 2.09 1.26a12 12 0 0 1 0 21.48L12 23l-2.09-1.26a12 12 0 0 1 0-21.48L12 1"/>
+                    </svg>
+                    <span>Configuración</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info" id="user-info">
+                    <div class="user-avatar">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                    </div>
+                    <div class="user-details">
+                        <span class="user-name" id="user-name">Usuario</span>
+                        <button class="logout-btn" onclick="LoginManager.logout()">
+                            Cerrar Sesión
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="chat-main">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-status">
+                    <div class="status-indicator">
+                        <div class="status-dot pulsing"></div>
+                        <span>Chat Activo</span>
+                    </div>
+                </div>
+                <button class="analysis-btn" onclick="window.location.href='admin.html'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18 17V9"/>
+                        <path d="M13 17V5"/>
+                        <path d="M8 17v-3"/>
+                    </svg>
+                    Ver Análisis
+                </button>
+            </div>
+
+            <!-- Messages Container -->
+            <div class="messages-container" id="messages-container">
+                <!-- Welcome message will be added by JavaScript -->
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input-container">
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="chat-input" 
+                        placeholder="Escribe tu mensaje..." 
+                        autocomplete="off"
+                    />
+                    <button id="send-btn" class="send-button">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="22" y1="2" x2="11" y2="13"/>
+                            <polygon points="22,2 15,22 11,13 2,9"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>Configuración del Chatbot</h3>
+            
+            <div class="form-group">
+                <label for="api-key-input">Clave API de Gemini:</label>
+                <div class="password-container">
+                    <input type="password" id="api-key-input" placeholder="Ingresa tu clave API aquí...">
+                    <button type="button" id="toggle-password" title="Mostrar/Ocultar clave">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                </div>
+                <small class="form-text">La clave API se guardará solo en este dispositivo.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="gemini-model-select">Modelo de Gemini:</label>
+                <select id="gemini-model-select">
+                    <option value="gemini-1.5-flash-latest">gemini-1.5-flash (rápido)</option>
+                    <option value="gemini-1.5-pro-latest">gemini-1.5-pro (preciso)</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button id="save-api-settings" class="btn-primary">Guardar</button>
+                <button id="test-api-connection" class="btn-secondary">Probar conexión</button>
+            </div>
+            
+            <div id="api-test-result"></div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/login.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/voiceRecognition.js"></script>
+    <script src="js/chatbot.js"></script>
+    
+    <!-- Enhanced Chat Script -->
+    <script>
+        class ChatInterface {
+            constructor() {
+                this.messagesContainer = document.getElementById('messages-container');
+                this.chatInput = document.getElementById('chat-input');
+                this.sendBtn = document.getElementById('send-btn');
+                this.questions = [];
+                this.welcomeOptionsShown = false;
+                
+                this.init();
+            }
+
+            async init() {
+                // Check session
+                const session = LoginManager.checkSession();
+                if (!session) {
+                    window.location.href = './login.html';
+                    return;
+                }
+                
+                // Update user info
+                this.updateUserInfo(session);
+                
+                // Load questions and show welcome
+                await this.loadQuestions();
+                this.showWelcomeMessage();
+                
+                // Setup event listeners
+                this.setupEventListeners();
+                
+                // Setup settings modal
+                this.setupSettingsModal();
+            }
+
+            updateUserInfo(session) {
+                const userName = document.getElementById('user-name');
+                if (userName) {
+                    userName.textContent = `Usuario: ${session.documento}`;
+                }
+            }
+
+            async loadQuestions() {
+                try {
+                    const response = await fetch('data/data.json');
+                    const data = await response.json();
+                    this.questions = data.faq.filter(item => 
+                        item.question && 
+                        item.answer && 
+                        !item.question.includes('Felicitaciones') &&
+                        !item.question.includes('comentarios')
+                    );
+                } catch (error) {
+                    console.error('Error loading questions:', error);
+                    this.questions = [
+                        { question: "¿Qué servicios ofrece LEAN?", answer: "Servicios de ingeniería y automatización" },
+                        { question: "¿Cómo puedo contactarlos?", answer: "Información de contacto disponible" },
+                        { question: "¿Qué es la automatización industrial?", answer: "Explicación sobre automatización" }
+                    ];
+                }
+            }
+
+            getRandomQuestions(count = 3) {
+                const shuffled = [...this.questions].sort(() => 0.5 - Math.random());
+                return shuffled.slice(0, count);
+            }
+
+            showWelcomeMessage() {
+                const welcomeHTML = `
+                    <div class="message bot-message" data-timestamp="${new Date().toLocaleTimeString()}">
+                        <div class="message-avatar bot-avatar">
+                            <div class="avatar-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="m2 17 10 5 10-5"/>
+                                    <path d="m2 12 10 5 10-5"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">
+                                ¡Hola! Soy LEAN, tu asistente virtual. ¿En qué puedo ayudarte con eso? ¿Podrías proporcionar más detalles?
+                            </div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                `;
+                
+                this.messagesContainer.innerHTML = welcomeHTML;
+                
+                // Show welcome options after a brief delay
+                setTimeout(() => {
+                    this.showWelcomeOptions();
+                }, 500);
+            }
+
+            showWelcomeOptions() {
+                if (this.welcomeOptionsShown) return;
+                
+                const randomQuestions = this.getRandomQuestions(3);
+                const emojis = ['🤔', '💡', '❓'];
+                
+                const optionsHTML = `
+                    <div class="welcome-options" id="welcome-options">
+                        <p class="options-text">Selecciona una opción para comenzar:</p>
+                        <div class="option-buttons">
+                            ${randomQuestions.map((q, index) => `
+                                <button class="option-btn" data-question="${q.question}">
+                                    ${emojis[index]} ${q.question.replace(/^\d+\.\s*/, '')}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                this.messagesContainer.insertAdjacentHTML('beforeend', optionsHTML);
+                this.scrollToBottom();
+                this.welcomeOptionsShown = true;
+                
+                // Add click handlers to option buttons
+                document.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const question = e.target.dataset.question;
+                        this.handleOptionClick(question);
+                    });
+                });
+            }
+
+            handleOptionClick(question) {
+                // Remove welcome options
+                const welcomeOptions = document.getElementById('welcome-options');
+                if (welcomeOptions) {
+                    welcomeOptions.remove();
+                }
+                
+                // Send question as user message
+                this.addUserMessage(question.replace(/^\d+\.\s*/, ''));
+                
+                // Simulate bot response
+                setTimeout(() => {
+                    const selectedQuestion = this.questions.find(q => q.question === question);
+                    const answer = selectedQuestion ? selectedQuestion.answer : "Gracias por tu pregunta. Te ayudo con eso.";
+                    this.addBotMessage(answer);
+                }, 1000);
+            }
+
+            setupEventListeners() {
+                // Send button click
+                this.sendBtn.addEventListener('click', () => {
+                    this.sendMessage();
+                });
+                
+                // Enter key press
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        this.sendMessage();
+                    }
+                });
+                
+                // Settings button
+                const settingsNav = document.getElementById('settings-nav');
+                if (settingsNav) {
+                    settingsNav.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        document.getElementById('settings-modal').style.display = 'block';
+                    });
+                }
+            }
+
+            sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message) return;
+                
+                this.addUserMessage(message);
+                this.chatInput.value = '';
+                
+                // Simulate bot response
+                setTimeout(() => {
+                    this.simulateBotResponse(message);
+                }, 1000);
+            }
+
+            addUserMessage(text) {
+                const messageHTML = `
+                    <div class="message user-message" data-timestamp="${new Date().toLocaleTimeString()}">
+                        <div class="message-content">
+                            <div class="message-text">${text}</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                        <div class="message-avatar user-avatar">
+                            <div class="avatar-text">U</div>
+                        </div>
+                    </div>
+                `;
+                
+                this.messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+                this.scrollToBottom();
+            }
+
+            addBotMessage(text) {
+                const messageHTML = `
+                    <div class="message bot-message" data-timestamp="${new Date().toLocaleTimeString()}">
+                        <div class="message-avatar bot-avatar">
+                            <div class="avatar-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="m2 17 10 5 10-5"/>
+                                    <path d="m2 12 10 5 10-5"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">${text}</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                `;
+                
+                this.messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+                this.scrollToBottom();
+            }
+
+            simulateBotResponse(userMessage) {
+                const responses = [
+                    "Entiendo tu consulta. Permíteme ayudarte con eso. ¿Podrías proporcionar más detalles?",
+                    "Gracias por tu pregunta. Te ayudo con información sobre nuestros servicios.",
+                    "Excelente pregunta. En LEAN nos especializamos en soluciones de ingeniería y automatización.",
+                    "Te puedo ayudar con eso. ¿Hay algo específico que te gustaría saber?",
+                    "Perfecto. Déjame darte información detallada sobre ese tema."
+                ];
+                
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                this.addBotMessage(randomResponse);
+            }
+
+            scrollToBottom() {
+                setTimeout(() => {
+                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                }, 100);
+            }
+
+            setupSettingsModal() {
+                const modal = document.getElementById('settings-modal');
+                const closeBtn = modal.querySelector('.close');
+                
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+                
+                window.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            }
+        }
+
+        // Initialize chat when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatInterface();
+        });
+    </script>
+</body>
+</html>
