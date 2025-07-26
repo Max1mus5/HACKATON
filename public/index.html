@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LEAN - Chatbot de Exposición Electromagnética</title>
-    <link href="css/styles.css" rel="stylesheet">
+    <link href="css/main.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +12,20 @@
 </head>
 <body>
     <div class="app-container">
+        <!-- Session Bar -->
+        <div class="session-bar" id="session-bar" style="display: none;">
+            <div class="session-info">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span id="session-user">Usuario: </span>
+            </div>
+            <button class="logout-button" onclick="LoginManager.logout()">
+                Cerrar Sesión
+            </button>
+        </div>
+
         <!-- Logo Header -->
         <div class="logo-header">
             <img src="img/LOGO LEAN.png" alt="LEAN Logo" />
@@ -31,7 +45,8 @@
 
             <div id="chat-window">
                 <div class="bot-message message">
-                    Hola, soy el asistente virtual de LEAN para consultas sobre exposición electromagnética. ¿En qué puedo ayudarte hoy?
+                    Bienvenido(a), soy el asistente virtual de Inge Lean S.A.S.
+Estoy aquí para brindarte información sobre nuestros servicios en ingeniería, automatización industrial y tecnologías 4.0. ¿Cómo puedo ayudarte hoy?
                 </div>
             </div>
 
@@ -82,8 +97,32 @@
     </div>
 
     <!-- Scripts -->
+    <script src="js/login.js"></script>
     <script src="js/config.js"></script>
     <script src="js/voiceRecognition.js"></script>
     <script src="js/chatbot.js"></script>
+    
+    <!-- Session protection script -->
+    <script>
+        // Check if user is logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const session = LoginManager.checkSession();
+            
+            if (!session) {
+                // No valid session, redirect to login
+                window.location.href = './login.html';
+                return;
+            }
+            
+            // Show session info
+            const sessionBar = document.getElementById('session-bar');
+            const sessionUser = document.getElementById('session-user');
+            
+            if (sessionBar && sessionUser) {
+                sessionUser.textContent = `Usuario: ${session.documento}`;
+                sessionBar.style.display = 'flex';
+            }
+        });
+    </script>
 </body>
 </html>
