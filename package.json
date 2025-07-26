@@ -1,0 +1,36 @@
+{
+  "name": "lean-chatbot-electromagnetic",
+  "version": "1.0.0",
+  "description": "Chatbot interactivo para consultas sobre exposición electromagnética desarrollado para LEAN",
+  "main": "public/index.html",
+  "scripts": {
+    "start": "npx serve public",
+    "dev": "npx serve public -l 3000",
+    "build": "echo 'No build process needed for vanilla JS'",
+    "test": "echo 'No tests configured'"
+  },
+  "keywords": [
+    "chatbot",
+    "electromagnetic",
+    "gemini",
+    "javascript",
+    "voice-recognition",
+    "lean"
+  ],
+  "author": "LEAN Team",
+  "license": "MIT",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lean/chatbot-electromagnetic.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lean/chatbot-electromagnetic/issues"
+  },
+  "homepage": "https://github.com/lean/chatbot-electromagnetic#readme"
+}

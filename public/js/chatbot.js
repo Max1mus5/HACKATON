@@ -31,7 +31,7 @@ let answers = [];
 // Función para cargar el corpus desde data.json
 async function loadCorpus() {
     try {
-        // Cambio: usar una ruta relativa desde la raíz del sitio en lugar de una ruta relativa
+        // Cargar datos desde la estructura pública
         const response = await fetch('./data/data.json');
         corpus = await response.json();
         
