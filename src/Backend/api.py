@@ -8,6 +8,8 @@ from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_c
 from .repositories.chat_repository import get_all_chats_with_score
 import os
 
+app = FastAPI()
+
 # Variable global temporal para almacenar la API key recibida
 GEMINI_API_KEY_RUNTIME = None
 # Endpoint para recibir y almacenar la API key de Gemini
@@ -23,7 +25,6 @@ def set_gemini_api_key(payload: dict):
     GEMINI_API_KEY_RUNTIME = api_key
     os.environ["GEMINI_API_KEY"] = api_key  # Para que la función de sentimiento la use
     return {"message": "API key almacenada correctamente"}
-app = FastAPI()
 
 # Configuración de CORS
 app.add_middleware(
