@@ -7,6 +7,7 @@ from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut
 from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
 from .repositories.chat_repository import get_all_chats_with_score, get_chat_messages, get_chat_messages_by_user
 import os
+import json
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
 
@@ -177,3 +178,67 @@ def test_gemini_integration():
             "message": f"Error al probar Gemini: {str(e)}",
             "lean_bot": "LEAN BOT no disponible"
         }
+
+# ENDPOINT PARA PANEL DE ADMINISTRACIÓN
+@app.get('/admin/all-chats')
+def obtener_todos_los_chats_admin(db: Session = Depends(get_db)):
+    """
+    Endpoint para el panel de administración que obtiene todos los chats con información de usuarios
+    """
+    try:
+        chats_data = get_all_chats_with_score(db)
+        return {"chats": chats_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
+
+# ENDPOINTS PARA ADMINISTRACIÓN
+@app.get('/admin/chats')
+def get_all_chats_admin(db: Session = Depends(get_db)):
+    """
+    Obtiene todos los chats con información del usuario para el panel de administración
+    """
+    try:
+        chats_with_users = get_all_chats_with_score(db)
+        return chats_with_users
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener chats: {str(e)}")
+
+@app.get('/admin/stats')
+def get_admin_stats(db: Session = Depends(get_db)):
+    """
+    Obtiene estadísticas generales para el panel de administración
+    """
+    try:
+        chats_data = get_all_chats_with_score(db)
+        
+        # Calcular estadísticas básicas
+        total_chats = len(chats_data)
+        unique_users = len(set(chat.get('usuario_doc_id') for chat in chats_data))
+        
+        # Calcular promedio de sentimientos
+        total_score = 0
+        score_count = 0
+        
+        for chat in chats_data:
+            if chat.get('mensajes'):
+                try:
+                    messages = chat['mensajes'] if isinstance(chat['mensajes'], list) else json.loads(chat['mensajes'])
+                    for message in messages:
+                        if message.get('score'):
+                            total_score += float(message['score'])
+                            score_count += 1
+                except:
+                    continue
+        
+        avg_sentiment = (total_score / score_count) if score_count > 0 else 5.0
+        avg_sentiment_percentage = int((avg_sentiment / 10) * 100)
+        
+        return {
+            "total_users": unique_users,
+            "total_chats": total_chats,
+            "avg_sentiment": avg_sentiment_percentage,
+            "avg_response_time": "2.3s"  # Placeholder
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener estadísticas: {str(e)}")

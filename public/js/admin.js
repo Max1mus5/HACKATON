@@ -3,42 +3,38 @@ class AdminPanel {
     constructor() {
         this.searchTerm = '';
         this.activeTab = 'chats';
+        this.allChats = [];
+        this.allUsers = [];
         this.stats = {
-            totalUsers: 1247,
-            totalChats: 3891,
-            avgSentiment: 72,
-            avgResponseTime: "2.3s"
+            totalUsers: 0,
+            totalChats: 0,
+            avgSentiment: 0,
+            avgResponseTime: "0s"
         };
         
-        this.topKeywords = [
-            { word: "ayuda", count: 234, sentiment: "neutral" },
-            { word: "problema", count: 189, sentiment: "sad" },
-            { word: "gracias", count: 156, sentiment: "happy" },
-            { word: "información", count: 143, sentiment: "neutral" },
-            { word: "excelente", count: 98, sentiment: "happy" }
-        ];
-        
-        this.recentChats = [
-            { id: 1, user: "12345678", messages: 15, sentiment: "happy", timestamp: "2024-01-15 14:30", duration: "12 min" },
-            { id: 2, user: "87654321", messages: 8, sentiment: "neutral", timestamp: "2024-01-15 14:25", duration: "6 min" },
-            { id: 3, user: "11223344", messages: 22, sentiment: "sad", timestamp: "2024-01-15 14:20", duration: "18 min" },
-            { id: 4, user: "44332211", messages: 5, sentiment: "happy", timestamp: "2024-01-15 14:15", duration: "4 min" }
-        ];
-        
-        this.hourlyActivity = [20, 15, 10, 8, 12, 25, 35, 45, 60, 70, 65, 55, 50, 45, 40, 35, 30, 25, 20, 15, 12, 10, 8, 5];
+        this.topKeywords = [];
+        this.recentChats = [];
+        this.hourlyActivity = new Array(24).fill(0);
         
         this.init();
     }
     
-    init() {
+    async init() {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.setupElements());
         } else {
-            this.setupElements();
+            await this.setupElements();
         }
     }
     
-    setupElements() {
+    async setupElements() {
+        // Cargar datos del backend
+        await this.loadBackendData();
+        
+        // Procesar datos
+        this.processData();
+        
+        // Configurar UI
         this.setupStats();
         this.setupTabs();
         this.setupSearch();
@@ -48,8 +44,199 @@ class AdminPanel {
         this.setupButtons();
     }
     
+    async loadBackendData() {
+        try {
+            console.log('📊 Cargando datos del backend para admin...');
+            
+            // Cargar todos los chats con scores
+            const chatsResponse = await fetch('https://hackaton-d1h6.onrender.com/admin/all-chats', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (chatsResponse.ok) {
+                const data = await chatsResponse.json();
+                this.allChats = data.chats || [];
+                console.log(`✅ Cargados ${this.allChats.length} chats`);
+            } else {
+                console.warn('❌ No se pudieron cargar los chats');
+                this.allChats = [];
+            }
+            
+        } catch (error) {
+            console.error('❌ Error al cargar datos del backend:', error);
+            this.allChats = [];
+        }
+    }
+    
+    processData() {
+        console.log('📊 Procesando datos para el panel de administración...');
+        
+        if (this.allChats.length === 0) {
+            console.log('📊 No hay datos para procesar');
+            return;
+        }
+        
+        // Extraer usuarios únicos
+        const uniqueUsers = new Set();
+        let totalMessages = 0;
+        let totalScore = 0;
+        let scoreCount = 0;
+        const wordCount = {};
+        const hourlyStats = new Array(24).fill(0);
+        const recentChatsData = [];
+        
+        this.allChats.forEach(chat => {
+            uniqueUsers.add(chat.usuario_doc_id);
+            
+            // Procesar mensajes si existen
+            if (chat.mensajes) {
+                let messages = [];
+                try {
+                    if (typeof chat.mensajes === 'string') {
+                        messages = JSON.parse(chat.mensajes);
+                    } else if (Array.isArray(chat.mensajes)) {
+                        messages = chat.mensajes;
+                    }
+                } catch (e) {
+                    console.warn('Error parsing messages for chat:', chat.id);
+                    return;
+                }
+                
+                totalMessages += messages.length;
+                
+                // Procesar cada mensaje
+                messages.forEach(message => {
+                    // Procesar score
+                    if (message.score) {
+                        totalScore += parseFloat(message.score);
+                        scoreCount++;
+                    }
+                    
+                    // Procesar palabras clave del mensaje del usuario
+                    if (message.message) {
+                        this.extractKeywords(message.message, wordCount);
+                    }
+                    
+                    // Procesar actividad por hora
+                    if (message.timestamp) {
+                        const hour = new Date(message.timestamp).getHours();
+                        hourlyStats[hour]++;
+                    }
+                });
+                
+                // Crear datos para chats recientes
+                if (messages.length > 0) {
+                    const lastMessage = messages[messages.length - 1];
+                    const sentiment = this.scoresToSentiment(messages.map(m => m.score || 5));
+                    
+                    recentChatsData.push({
+                        id: chat.id,
+                        user: chat.usuario_doc_id.toString(),
+                        messages: messages.length,
+                        sentiment: sentiment,
+                        timestamp: lastMessage.timestamp || new Date().toISOString(),
+                        duration: this.calculateChatDuration(messages)
+                    });
+                }
+            }
+        });
+        
+        // Actualizar estadísticas
+        this.stats = {
+            totalUsers: uniqueUsers.size,
+            totalChats: this.allChats.length,
+            avgSentiment: scoreCount > 0 ? Math.round((totalScore / scoreCount / 10) * 100) : 50,
+            avgResponseTime: "2.3s" // Placeholder por ahora
+        };
+        
+        // Procesar palabras clave más frecuentes
+        this.topKeywords = this.getTopKeywords(wordCount, 5);
+        
+        // Normalizar actividad por hora
+        const maxActivity = Math.max(...hourlyStats);
+        this.hourlyActivity = hourlyStats.map(count => 
+            maxActivity > 0 ? Math.round((count / maxActivity) * 100) : 0
+        );
+        
+        // Ordenar chats recientes por timestamp
+        this.recentChats = recentChatsData
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .slice(0, 10);
+        
+        console.log('✅ Datos procesados:', {
+            users: this.stats.totalUsers,
+            chats: this.stats.totalChats,
+            avgSentiment: this.stats.avgSentiment,
+            topKeywords: this.topKeywords.length,
+            recentChats: this.recentChats.length
+        });
+    }
+    
+    extractKeywords(message, wordCount) {
+        // Palabras comunes a ignorar
+        const stopWords = new Set([
+            'el', 'la', 'de', 'que', 'y', 'a', 'en', 'un', 'es', 'se', 'no', 'te', 'lo', 'le', 'da', 'su', 'por', 'son', 'con', 'para', 'una', 'tiene', 'me', 'si', 'hay', 'o', 'ser', 'está', 'como', 'mi', 'sus', 'del', 'al', 'las', 'todo', 'pero', 'más', 'hace', 'muy', 'puede', 'sobre', 'años', 'estado', 'tan', 'porque', 'esta', 'cuando', 'él', 'también', 'antes', 'han', 'hasta', 'ahora', 'donde', 'quien', 'durante', 'siempre', 'todos', 'mismo', 'otro', 'entre'
+        ]);
+        
+        const words = message.toLowerCase()
+            .replace(/[^\w\sáéíóúñ]/g, ' ')
+            .split(/\s+/)
+            .filter(word => word.length > 3 && !stopWords.has(word));
+        
+        words.forEach(word => {
+            wordCount[word] = (wordCount[word] || 0) + 1;
+        });
+    }
+    
+    getTopKeywords(wordCount, limit) {
+        return Object.entries(wordCount)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, limit)
+            .map(([word, count]) => ({
+                word: word,
+                count: count,
+                sentiment: this.getWordSentiment(word)
+            }));
+    }
+    
+    getWordSentiment(word) {
+        // Clasificación básica de sentimientos por palabra
+        const positiveWords = ['gracias', 'excelente', 'perfecto', 'bueno', 'genial', 'fantástico', 'increíble', 'ayuda', 'útil'];
+        const negativeWords = ['problema', 'error', 'mal', 'horrible', 'terrible', 'fallo', 'difícil'];
+        
+        if (positiveWords.includes(word)) return 'happy';
+        if (negativeWords.includes(word)) return 'sad';
+        return 'neutral';
+    }
+    
+    scoresToSentiment(scores) {
+        const validScores = scores.filter(s => s != null).map(s => parseFloat(s));
+        if (validScores.length === 0) return 'neutral';
+        
+        const avgScore = validScores.reduce((sum, score) => sum + score, 0) / validScores.length;
+        
+        if (avgScore > 5) return 'happy';
+        if (avgScore < 5) return 'sad';
+        return 'neutral';
+    }
+    
+    calculateChatDuration(messages) {
+        if (messages.length < 2) return '1 min';
+        
+        const firstTimestamp = new Date(messages[0].timestamp || Date.now());
+        const lastTimestamp = new Date(messages[messages.length - 1].timestamp || Date.now());
+        
+        const durationMs = lastTimestamp - firstTimestamp;
+        const durationMin = Math.max(1, Math.round(durationMs / 60000));
+        
+        return `${durationMin} min`;
+    }
+    
     setupStats() {
-        // Update stats display
+        // Update stats display with real data
         const totalUsersEl = document.getElementById('total-users');
         const totalChatsEl = document.getElementById('total-chats');
         const avgSentimentEl = document.getElementById('avg-sentiment');
@@ -59,6 +246,8 @@ class AdminPanel {
         if (totalChatsEl) totalChatsEl.textContent = this.stats.totalChats.toLocaleString();
         if (avgSentimentEl) avgSentimentEl.textContent = `${this.stats.avgSentiment}%`;
         if (avgResponseTimeEl) avgResponseTimeEl.textContent = this.stats.avgResponseTime;
+        
+        console.log('📊 Stats actualizadas:', this.stats);
     }
     
     setupTabs() {
@@ -213,11 +402,45 @@ class AdminPanel {
     }
     
     setupSentimentAnalysis() {
+        // Calcular sentimientos reales basados en los datos
+        let positiveCount = 0;
+        let neutralCount = 0;
+        let negativeCount = 0;
+        
+        this.recentChats.forEach(chat => {
+            switch(chat.sentiment) {
+                case 'happy':
+                    positiveCount++;
+                    break;
+                case 'sad':
+                    negativeCount++;
+                    break;
+                default:
+                    neutralCount++;
+                    break;
+            }
+        });
+        
+        const total = this.recentChats.length || 1;
         const sentiments = [
-            { label: 'Positivo', percentage: 65, type: 'positive' },
-            { label: 'Neutral', percentage: 25, type: 'neutral' },
-            { label: 'Negativo', percentage: 10, type: 'negative' }
+            { 
+                label: 'Positivo', 
+                percentage: Math.round((positiveCount / total) * 100), 
+                type: 'positive' 
+            },
+            { 
+                label: 'Neutral', 
+                percentage: Math.round((neutralCount / total) * 100), 
+                type: 'neutral' 
+            },
+            { 
+                label: 'Negativo', 
+                percentage: Math.round((negativeCount / total) * 100), 
+                type: 'negative' 
+            }
         ];
+        
+        console.log('📊 Análisis de sentimientos:', sentiments);
         
         sentiments.forEach(sentiment => {
             const progressFill = document.getElementById(`progress-${sentiment.type}`);
@@ -361,6 +584,52 @@ class AdminPanel {
             hour: '2-digit',
             minute: '2-digit'
         });
+    }
+    
+    // Funciones utilitarias adicionales
+    getSentimentClass(score) {
+        if (score > 5) return 'positive';
+        if (score < 5) return 'negative';
+        return 'neutral';
+    }
+    
+    getSentimentIcon(score) {
+        if (score > 5) return '😊';
+        if (score < 5) return '😞';
+        return '😐';
+    }
+    
+    getTimeAgo(timestamp) {
+        const now = new Date();
+        const time = new Date(timestamp);
+        const diffInMs = now - time;
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMinutes / 60);
+        const diffInDays = Math.floor(diffInHours / 24);
+        
+        if (diffInDays > 0) return `hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`;
+        if (diffInHours > 0) return `hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`;
+        if (diffInMinutes > 0) return `hace ${diffInMinutes} minuto${diffInMinutes > 1 ? 's' : ''}`;
+        return 'hace un momento';
+    }
+    
+    truncateMessage(message, maxLength = 80) {
+        if (!message) return 'Sin mensaje';
+        if (message.length <= maxLength) return message;
+        return message.substring(0, maxLength) + '...';
+    }
+    
+    // Función para ver detalles de chat específico
+    viewChatDetails(userId) {
+        console.log('🔍 Viendo detalles del usuario:', userId);
+        // Esta función puede expandirse para mostrar un modal con detalles
+        alert(`Mostrando detalles del chat para usuario: ${userId}`);
+    }
+    
+    // Función para actualizar los datos periódicamente
+    async refreshData() {
+        console.log('🔄 Actualizando datos del panel de administración...');
+        await this.loadBackendData();
     }
 }
 

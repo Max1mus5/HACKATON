@@ -4,29 +4,229 @@
 
 class DashboardManager {
     constructor() {
+        this.chatHistory = [];
+        this.userData = null;
         this.sentimentData = {
-            positive: 65,
-            neutral: 25,
-            negative: 10
+            positive: 0,
+            neutral: 0,
+            negative: 0
         };
-        
-        this.trendData = [85, 70, 90, 65, 80, 75, 95];
-        
-        this.recentChats = [
-            { id: 1, date: "2024-01-15", messages: 12, avgSentiment: "happy", duration: "15 min" },
-            { id: 2, date: "2024-01-14", messages: 8, avgSentiment: "neutral", duration: "8 min" },
-            { id: 3, date: "2024-01-13", messages: 15, avgSentiment: "happy", duration: "22 min" },
-            { id: 4, date: "2024-01-12", messages: 6, avgSentiment: "sad", duration: "12 min" }
-        ];
+        this.totalMessages = 0;
+        this.totalChatTime = 0;
+        this.trendData = [];
         
         this.init();
     }
     
-    init() {
-        this.animateProgressBars();
-        this.animateChartBars();
+    async init() {
+        // Verificar sesión
+        const session = this.checkSession();
+        if (!session) {
+            window.location.href = './login';
+            return;
+        }
+        
+        // Cargar datos del usuario
+        await this.loadUserData(session);
+        
+        // Procesar y mostrar datos
+        this.processData();
+        this.updateUI();
         this.setupEventListeners();
         this.addHoverEffects();
+    }
+    
+    checkSession() {
+        try {
+            const session = localStorage.getItem('lean_session');
+            return session ? JSON.parse(session) : null;
+        } catch (error) {
+            console.error('Error al verificar sesión:', error);
+            return null;
+        }
+    }
+    
+    async loadUserData(session) {
+        if (!session.doc_id) {
+            console.warn('No se encontró doc_id en la sesión');
+            return;
+        }
+        
+        try {
+            console.log(`📊 Cargando datos del dashboard para usuario: ${session.doc_id}`);
+            
+            const response = await fetch(`https://hackaton-d1h6.onrender.com/usuarios/${session.doc_id}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+
+            this.userData = await response.json();
+            
+            // Extraer mensajes del chat
+            if (this.userData.chat && this.userData.chat.mensajes) {
+                try {
+                    if (typeof this.userData.chat.mensajes === 'string') {
+                        this.chatHistory = JSON.parse(this.userData.chat.mensajes);
+                    } else if (Array.isArray(this.userData.chat.mensajes)) {
+                        this.chatHistory = this.userData.chat.mensajes;
+                    }
+                    
+                    console.log(`✅ Datos cargados: ${this.chatHistory.length} mensajes encontrados`);
+                } catch (parseError) {
+                    console.error('Error al parsear mensajes:', parseError);
+                    this.chatHistory = [];
+                }
+            } else {
+                console.log('📊 No hay mensajes en el historial');
+                this.chatHistory = [];
+            }
+            
+        } catch (error) {
+            console.error('❌ Error al cargar datos del usuario:', error);
+            this.chatHistory = [];
+        }
+    }
+    
+    processData() {
+        if (this.chatHistory.length === 0) {
+            console.log('📊 No hay datos para procesar');
+            return;
+        }
+        
+        // Contadores básicos
+        this.totalMessages = this.chatHistory.length;
+        
+        // Procesar sentimientos (score > 5 = positivo, = 5 = neutral, < 5 = negativo)
+        let positiveCount = 0;
+        let neutralCount = 0;
+        let negativeCount = 0;
+        
+        // Agrupar por días para tendencias
+        const dayGroups = {};
+        
+        this.chatHistory.forEach(message => {
+            // Contar sentimientos
+            const score = parseFloat(message.score) || 5;
+            if (score > 5) {
+                positiveCount++;
+            } else if (score === 5) {
+                neutralCount++;
+            } else {
+                negativeCount++;
+            }
+            
+            // Agrupar por día para tendencias
+            if (message.timestamp) {
+                const date = new Date(message.timestamp);
+                const dayKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+                
+                if (!dayGroups[dayKey]) {
+                    dayGroups[dayKey] = {
+                        scores: [],
+                        count: 0
+                    };
+                }
+                
+                dayGroups[dayKey].scores.push(score);
+                dayGroups[dayKey].count++;
+            }
+        });
+        
+        // Calcular porcentajes de sentimiento
+        if (this.totalMessages > 0) {
+            this.sentimentData = {
+                positive: Math.round((positiveCount / this.totalMessages) * 100),
+                neutral: Math.round((neutralCount / this.totalMessages) * 100),
+                negative: Math.round((negativeCount / this.totalMessages) * 100)
+            };
+        }
+        
+        // Calcular tendencias por día (últimos 7 días)
+        const sortedDays = Object.keys(dayGroups).sort();
+        const last7Days = sortedDays.slice(-7);
+        
+        this.trendData = last7Days.map(day => {
+            const dayData = dayGroups[day];
+            const avgScore = dayData.scores.reduce((sum, score) => sum + score, 0) / dayData.scores.length;
+            // Convertir score promedio a porcentaje (0-10 -> 0-100)
+            return Math.round((avgScore / 10) * 100);
+        });
+        
+        // Si no hay suficientes días, llenar con valores por defecto
+        while (this.trendData.length < 7) {
+            this.trendData.unshift(50); // Valor neutral
+        }
+        
+        console.log('📊 Datos procesados:', {
+            totalMessages: this.totalMessages,
+            sentimentData: this.sentimentData,
+            trendData: this.trendData,
+            daysWithData: last7Days.length
+        });
+    }
+    
+    updateUI() {
+        // Actualizar información en el header
+        this.updateHeader();
+        
+        // Actualizar sentimientos
+        this.updateSentimentCards();
+        
+        // Actualizar gráfico de tendencias
+        this.updateTrendChart();
+        
+        // Animar las actualizaciones
+        this.animateProgressBars();
+        this.animateChartBars();
+    }
+    
+    updateHeader() {
+        const subtitle = document.querySelector('.dashboard-subtitle');
+        if (subtitle && this.totalMessages > 0) {
+            subtitle.textContent = `${this.totalMessages} mensajes analizados • Datos actualizados`;
+        }
+    }
+    
+    updateSentimentCards() {
+        // Actualizar porcentajes en las tarjetas
+        const percentageElements = document.querySelectorAll('.percentage');
+        const progressFills = document.querySelectorAll('.progress-fill');
+        
+        const values = [this.sentimentData.positive, this.sentimentData.neutral, this.sentimentData.negative];
+        
+        percentageElements.forEach((el, index) => {
+            if (values[index] !== undefined) {
+                el.textContent = `${values[index]}%`;
+            }
+        });
+        
+        progressFills.forEach((fill, index) => {
+            if (values[index] !== undefined) {
+                fill.setAttribute('data-value', values[index]);
+            }
+        });
+    }
+    
+    updateTrendChart() {
+        const chartBars = document.querySelectorAll('.chart-bar');
+        
+        chartBars.forEach((barContainer, index) => {
+            if (this.trendData[index] !== undefined) {
+                barContainer.setAttribute('data-height', this.trendData[index]);
+                
+                // Actualizar día
+                const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+                const today = new Date();
+                const dayIndex = (today.getDay() - this.trendData.length + index + 7) % 7;
+                barContainer.setAttribute('data-day', dayNames[dayIndex]);
+            }
+        });
     }
     
     // ================================
