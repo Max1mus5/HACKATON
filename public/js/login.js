@@ -158,7 +158,7 @@ class LoginManager {
         this.updateButtonState();
     }
     
-    saveSession(documento) {
+    saveSession(documento, apiData = null) {
         // Save session data to localStorage
         const sessionData = {
             documento: documento,
@@ -166,49 +166,89 @@ class LoginManager {
             sessionId: this.generateSessionId()
         };
         
+        // Agregar datos de la API si están disponibles
+        if (apiData) {
+            sessionData.doc_id = apiData.doc_id;
+            sessionData.userId = apiData.id; // UUID del usuario
+            if (apiData.chat) {
+                sessionData.chat_id = apiData.chat.id;
+                sessionData.chatData = {
+                    mensajes: apiData.chat.mensajes,
+                    score: apiData.chat.score
+                };
+            }
+        }
+        
         localStorage.setItem('lean_session', JSON.stringify(sessionData));
         
         // Set session expiry (24 hours)
         const expiryTime = new Date();
         expiryTime.setHours(expiryTime.getHours() + 24);
         localStorage.setItem('lean_session_expiry', expiryTime.toISOString());
+        
+        // Log para debugging
+        console.log('Sesión guardada:', sessionData);
     }
     
     generateSessionId() {
         return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     }
     
-    handleLogin() {
-        this.hideError();
+handleLogin() {
+    this.hideError();
+
+    // Validar entrada del usuario
+    const validation = this.validateDocumento(this.documento);
+    if (!validation.valid) {
+        this.showError(validation.message);
+        this.documentoInput.focus();
+        return;
+    }
+
+    // Mostrar estado de carga
+    const originalText = this.showLoading();
+
+    // Llamar a la API de FastAPI
+    fetch("http://localhost:8000/usuarios/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ doc_id: parseInt(this.documento) || this.documento })
+    })
+    .then((res) => {
+        if (!res.ok) {
+            return res.json().then(errorData => {
+                throw new Error(errorData.detail || "Error en la API");
+            });
+        }
+        return res.json();
+    })
+    .then((data) => {
+        // Guardar datos completos de la respuesta de la API
+        this.saveSession(this.documento, data);
+        window.location.href = './chat.html';
+    })
+    .catch((error) => {
+        console.error("Login error:", error);
+        this.hideLoading(originalText);
         
-        // Validate input
-        const validation = this.validateDocumento(this.documento);
-        if (!validation.valid) {
-            this.showError(validation.message);
-            this.documentoInput.focus();
-            return;
+        // Mensaje de error más específico
+        let errorMessage = "Error al iniciar sesión. ";
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage += "No se pudo conectar con el servidor. Verifica que esté funcionando.";
+        } else if (error.message.includes('404')) {
+            errorMessage += "Servicio no encontrado.";
+        } else if (error.message.includes('500')) {
+            errorMessage += "Error interno del servidor.";
+        } else {
+            errorMessage += "Verifica tus datos e intenta nuevamente.";
         }
         
-        // Show loading state
-        const originalText = this.showLoading();
-        
-        // Simulate API call delay (in real app, this would be an actual API call)
-        setTimeout(() => {
-            try {
-                // Save session
-                this.saveSession(this.documento);
-                
-                // Navigate to chat
-                window.location.href = './chat.html';
-                
-            } catch (error) {
-                console.error('Login error:', error);
-                this.hideLoading(originalText);
-                this.showError('Error al iniciar sesión. Por favor, intente nuevamente.');
-            }
-        }, 1000);
-    }
-    
+        this.showError(errorMessage);
+    });
+}
+
     // Check if user is already logged in
     static checkSession() {
         const session = localStorage.getItem('lean_session');
@@ -244,6 +284,34 @@ class LoginManager {
         localStorage.removeItem('lean_session_expiry');
         window.location.href = './login.html';
     }
+    
+    // Get specific session data
+    static getSessionData() {
+        const session = LoginManager.checkSession();
+        if (!session) return null;
+        
+        return {
+            documento: session.documento,
+            doc_id: session.doc_id,
+            userId: session.userId,
+            chat_id: session.chat_id,
+            chatData: session.chatData,
+            loginTime: session.loginTime,
+            sessionId: session.sessionId
+        };
+    }
+    
+    // Get chat ID specifically
+    static getChatId() {
+        const sessionData = LoginManager.getSessionData();
+        return sessionData ? sessionData.chat_id : null;
+    }
+    
+    // Get doc ID specifically
+    static getDocId() {
+        const sessionData = LoginManager.getSessionData();
+        return sessionData ? sessionData.doc_id : null;
+    }
 }
 
 // Initialize login manager when script loads
@@ -256,3 +324,24 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Add to global scope for debugging
 window.LoginManager = LoginManager;
+
+// Utility function to test API connection
+window.testApiConnection = async function() {
+    try {
+        console.log('Probando conexión con la API...');
+        const response = await fetch('http://localhost:8000/');
+        const data = await response.json();
+        console.log('✅ API conectada:', data);
+        return data;
+    } catch (error) {
+        console.error('❌ Error de conexión API:', error);
+        return null;
+    }
+};
+
+// Test connection when page loads (only in development)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    setTimeout(() => {
+        testApiConnection();
+    }, 1000);
+}

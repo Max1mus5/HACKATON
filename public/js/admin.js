@@ -280,7 +280,8 @@ class AdminPanel {
     
     // Action methods
     viewChatDetails(userId) {
-        alert(`Ver detalles de conversación para usuario: ${userId}\n\nEsta funcionalidad se implementará próximamente.`);
+        // Redirect to chat detail page
+        window.location.href = `chat-detail.html?userId=${userId}`;
     }
     
     exportData() {

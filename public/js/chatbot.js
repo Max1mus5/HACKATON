@@ -1,5 +1,3 @@
-// Chatbot.js - Implementación web del chatbot 
-// Basado en el notebook Chatbot.ipynb
 
 // Configuración del chatbot
 const config = {

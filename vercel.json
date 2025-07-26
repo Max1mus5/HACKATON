@@ -28,6 +28,10 @@
       "dest": "/public/admin.html"
     },
     {
+      "src": "/dashboard",
+      "dest": "/public/dashboard.html"
+    },
+    {
       "src": "/login.html",
       "dest": "/public/login.html"
     },
@@ -38,6 +42,10 @@
     {
       "src": "/admin.html",
       "dest": "/public/admin.html"
+    },
+    {
+      "src": "/dashboard.html",
+      "dest": "/public/dashboard.html"
     },
     {
       "src": "/index.html",

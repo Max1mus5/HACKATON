@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Dashboard - LEAN</title>
+    <link rel="icon" type="image/png" href="img/Favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="dashboard-content">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <div class="header-actions">
+                    <button class="back-button" onclick="window.location.href='chat.html'">
+                        <svg class="arrow-left" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m12 19-7-7 7-7"/>
+                            <path d="M19 12H5"/>
+                        </svg>
+                        Volver al Chat
+                    </button>
+                    <div class="header-info">
+                        <h1 class="dashboard-title">Mi Dashboard</h1>
+                        <p class="dashboard-subtitle">Análisis de sentimientos de tus conversaciones</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sentiment Overview Cards -->
+            <div class="sentiment-overview">
+                <div class="sentiment-card positive">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg class="smile-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="m8 14.5 4 4 4-4"/>
+                                <path d="M9 9h.01"/>
+                                <path d="M15 9h.01"/>
+                            </svg>
+                            Positivo
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="percentage">65%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill positive-fill" data-value="65"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sentiment-card neutral">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg class="meh-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="M8 15h8"/>
+                                <path d="M9 9h.01"/>
+                                <path d="M15 9h.01"/>
+                            </svg>
+                            Neutral
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="percentage">25%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill neutral-fill" data-value="25"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sentiment-card negative">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg class="frown-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"/>
+                                <path d="m16 16-4-4-4 4"/>
+                                <path d="M9 9h.01"/>
+                                <path d="M15 9h.01"/>
+                            </svg>
+                            Negativo
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div class="percentage">10%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill negative-fill" data-value="10"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sentiment Trend Chart -->
+            <div class="trend-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="trending-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/>
+                            <polyline points="16,7 22,7 22,13"/>
+                        </svg>
+                        Tendencia de Sentimientos
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="chart-container">
+                        <div class="chart-bar" data-height="85" data-day="dom">
+                            <div class="bar"></div>
+                            <span class="day-label">dom</span>
+                        </div>
+                        <div class="chart-bar" data-height="70" data-day="lun">
+                            <div class="bar"></div>
+                            <span class="day-label">lun</span>
+                        </div>
+                        <div class="chart-bar" data-height="90" data-day="mar">
+                            <div class="bar"></div>
+                            <span class="day-label">mar</span>
+                        </div>
+                        <div class="chart-bar" data-height="65" data-day="mié">
+                            <div class="bar"></div>
+                            <span class="day-label">mié</span>
+                        </div>
+                        <div class="chart-bar" data-height="80" data-day="jue">
+                            <div class="bar"></div>
+                            <span class="day-label">jue</span>
+                        </div>
+                        <div class="chart-bar" data-height="75" data-day="vie">
+                            <div class="bar"></div>
+                            <span class="day-label">vie</span>
+                        </div>
+                        <div class="chart-bar" data-height="95" data-day="sáb">
+                            <div class="bar"></div>
+                            <span class="day-label">sáb</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Chats -->
+            <div class="chats-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <svg class="message-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        Conversaciones Recientes
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="chats-list">
+                        <div class="chat-item" data-sentiment="happy">
+                            <div class="chat-info">
+                                <div class="chat-main">
+                                    <svg class="sentiment-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="m8 14.5 4 4 4-4"/>
+                                        <path d="M9 9h.01"/>
+                                        <path d="M15 9h.01"/>
+                                    </svg>
+                                    <span class="chat-date">2024-01-15</span>
+                                </div>
+                                <div class="chat-details">
+                                    <span class="chat-messages">
+                                        <svg class="message-count-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        12 mensajes
+                                    </span>
+                                    <span class="chat-duration">
+                                        <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12,6 12,12 16,14"/>
+                                        </svg>
+                                        15 min
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="sentiment-indicator happy"></div>
+                        </div>
+
+                        <div class="chat-item" data-sentiment="neutral">
+                            <div class="chat-info">
+                                <div class="chat-main">
+                                    <svg class="sentiment-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M8 15h8"/>
+                                        <path d="M9 9h.01"/>
+                                        <path d="M15 9h.01"/>
+                                    </svg>
+                                    <span class="chat-date">2024-01-14</span>
+                                </div>
+                                <div class="chat-details">
+                                    <span class="chat-messages">
+                                        <svg class="message-count-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        8 mensajes
+                                    </span>
+                                    <span class="chat-duration">
+                                        <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12,6 12,12 16,14"/>
+                                        </svg>
+                                        8 min
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="sentiment-indicator neutral"></div>
+                        </div>
+
+                        <div class="chat-item" data-sentiment="happy">
+                            <div class="chat-info">
+                                <div class="chat-main">
+                                    <svg class="sentiment-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="m8 14.5 4 4 4-4"/>
+                                        <path d="M9 9h.01"/>
+                                        <path d="M15 9h.01"/>
+                                    </svg>
+                                    <span class="chat-date">2024-01-13</span>
+                                </div>
+                                <div class="chat-details">
+                                    <span class="chat-messages">
+                                        <svg class="message-count-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        15 mensajes
+                                    </span>
+                                    <span class="chat-duration">
+                                        <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12,6 12,12 16,14"/>
+                                        </svg>
+                                        22 min
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="sentiment-indicator happy"></div>
+                        </div>
+
+                        <div class="chat-item" data-sentiment="sad">
+                            <div class="chat-info">
+                                <div class="chat-main">
+                                    <svg class="sentiment-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="m16 16-4-4-4 4"/>
+                                        <path d="M9 9h.01"/>
+                                        <path d="M15 9h.01"/>
+                                    </svg>
+                                    <span class="chat-date">2024-01-12</span>
+                                </div>
+                                <div class="chat-details">
+                                    <span class="chat-messages">
+                                        <svg class="message-count-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                        </svg>
+                                        6 mensajes
+                                    </span>
+                                    <span class="chat-duration">
+                                        <svg class="clock-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"/>
+                                            <polyline points="12,6 12,12 16,14"/>
+                                        </svg>
+                                        12 min
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="sentiment-indicator sad"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

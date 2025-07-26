@@ -1,5 +1,6 @@
 
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from .database import engine, Base, Session as DBSession
 from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut
@@ -7,7 +8,21 @@ from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_c
 
 app = FastAPI()
 
+# Configuración de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Permite todas las origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Permite todos los métodos HTTP
+    allow_headers=["*"],  # Permite todos los headers
+)
+
 Base.metadata.create_all(bind=engine)
+
+@app.get("/")
+def health_check():
+    """Endpoint de prueba para verificar que la API funciona y CORS está configurado"""
+    return {"message": "API LEAN Chatbot funcionando correctamente", "cors": "enabled"}
 
 def get_db():
     db = DBSession()
