@@ -18,25 +18,41 @@ async function loadChatHistory() {
             console.log('📋 Cargando historial de chat...');
             const chatHistory = await window.leanBotAPI.getChatHistory();
             
-            const chatWindow = document.getElementById("chat-window");
+            const chatWindow = document.getElementById("messages-container");
             if (chatHistory && chatHistory.length > 0) {
                 // Limpiar chat window antes de cargar historial
                 chatWindow.innerHTML = '';
                 
-                // Mostrar cada mensaje del historial con la nueva estructura
+                // Mostrar cada mensaje del historial con la estructura correcta
                 chatHistory.forEach(messageData => {
                     // Verificar que el mensaje tiene la estructura correcta
                     if (messageData.message && messageData.response) {
-                        // Mensaje del usuario
+                        // Mensaje del usuario con estilos correctos
                         const userMessage = document.createElement("div");
-                        userMessage.classList.add("user-message");
-                        userMessage.textContent = messageData.message;
+                        userMessage.classList.add("message", "user-message");
+                        userMessage.innerHTML = `
+                            <div class="message-avatar user-avatar">
+                                <span>U</span>
+                            </div>
+                            <div class="message-content">
+                                <div class="message-text">${messageData.message}</div>
+                                <div class="message-time">${new Date(messageData.timestamp).toLocaleTimeString()}</div>
+                            </div>
+                        `;
                         chatWindow.appendChild(userMessage);
                         
-                        // Respuesta del bot
+                        // Respuesta del bot con estilos correctos
                         const botMessage = document.createElement("div");
-                        botMessage.classList.add("bot-message");
-                        botMessage.textContent = messageData.response;
+                        botMessage.classList.add("message", "bot-message");
+                        botMessage.innerHTML = `
+                            <div class="message-avatar bot-avatar">
+                                <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+                            </div>
+                            <div class="message-content">
+                                <div class="message-text">${messageData.response}</div>
+                                <div class="message-time">${new Date(messageData.timestamp).toLocaleTimeString()}</div>
+                            </div>
+                        `;
                         chatWindow.appendChild(botMessage);
                         
                         // Log del score y timestamp para debugging (opcional)
@@ -89,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function() {
     // Cargar historial después de que LEAN BOT se inicialice
     setTimeout(async () => {
         await loadChatHistory();
-    }, 1000); // Esperar 1 segundo para que LEAN BOT se inicialice
+    }, 2000); // Aumentado a 2 segundos para asegurar que LEAN BOT se inicialice correctamente
 });
 
 // Cargar corpus de datos
@@ -448,23 +464,14 @@ function farewellResponse() {
 
 // Función principal que maneja las respuestas del chatbot
 async function getBotResponse(userInput) {
-    // Primero, intentar usar LEAN BOT API si está disponible
+    // IMPORTANTE: Si LEAN BOT backend está disponible, no usar esta función
+    // para evitar duplicaciones. Esta función es solo para fallback local.
     if (window.leanBotAPI && window.leanBotAPI.isBackendAvailable) {
-        try {
-            console.log('🤖 Usando LEAN BOT backend para respuesta...');
-            const fullResponse = await window.leanBotAPI.sendMessage(userInput);
-            
-            // Si es una respuesta del backend, retornar la respuesta del bot
-            if (fullResponse && fullResponse.response && !fullResponse.fallback) {
-                console.log('✅ Respuesta de LEAN BOT obtenida');
-                return fullResponse.response;
-            }
-        } catch (error) {
-            console.error('❌ Error con LEAN BOT backend, usando fallback local:', error);
-        }
+        console.log('⚠️ Backend disponible, no usar getBotResponse local para evitar duplicación');
+        return "Error: No usar función local cuando backend está disponible";
     }
 
-    // Fallback al sistema local original si LEAN BOT no está disponible
+    // Fallback al sistema local original solo si LEAN BOT no está disponible
     console.log('🔄 Usando sistema de respuestas local como fallback...');
     
     // Asegurarse de que el corpus esté cargado
@@ -942,32 +949,108 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Función para enviar mensaje
     async function sendMessage() {
-        const userInput = userInputField.value;
+        const userInput = userInputField.value.trim();
         if (userInput) {
-            const userMessage = document.createElement("div");
-            userMessage.classList.add("user-message");
-            userMessage.textContent = userInput;
-            chatWindow.appendChild(userMessage);
+            // Si LEAN BOT está disponible, usar solo el backend
+            if (window.leanBotAPI && window.leanBotAPI.isBackendAvailable) {
+                // Mostrar mensaje del usuario inmediatamente con estilos correctos
+                const userMessage = document.createElement("div");
+                userMessage.classList.add("message", "user-message");
+                userMessage.innerHTML = `
+                    <div class="message-avatar user-avatar">
+                        <span>U</span>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">${userInput}</div>
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+                chatWindow.appendChild(userMessage);
 
-            // Mostrar indicador de carga mientras se procesa la respuesta
-            const loadingIndicator = document.createElement("div");
-            loadingIndicator.classList.add("bot-message");
-            loadingIndicator.innerHTML = '<span class="loading"></span> Procesando...';
-            chatWindow.appendChild(loadingIndicator);
-            
-            // Desplazarse al final del chat
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+                // Mostrar indicador de carga
+                const loadingIndicator = document.createElement("div");
+                loadingIndicator.classList.add("message", "bot-message");
+                loadingIndicator.innerHTML = `
+                    <div class="message-avatar bot-avatar">
+                        <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+                    </div>
+                    <div class="message-content">
+                        <div class="message-text">
+                            <span class="loading"></span> Procesando...
+                        </div>
+                        <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                    </div>
+                `;
+                chatWindow.appendChild(loadingIndicator);
+                
+                // Desplazarse al final del chat
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                
+                try {
+                    // Enviar al backend y obtener respuesta
+                    const fullResponse = await window.leanBotAPI.sendMessage(userInput);
+                    
+                    // Reemplazar indicador de carga con la respuesta del backend
+                    chatWindow.removeChild(loadingIndicator);
+                    
+                    const botMessage = document.createElement("div");
+                    botMessage.classList.add("message", "bot-message");
+                    botMessage.innerHTML = `
+                        <div class="message-avatar bot-avatar">
+                            <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">${fullResponse.response || fullResponse}</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                    chatWindow.appendChild(botMessage);
+                    
+                } catch (error) {
+                    console.error('❌ Error con backend:', error);
+                    // Reemplazar indicador de carga con mensaje de error
+                    chatWindow.removeChild(loadingIndicator);
+                    
+                    const errorMessage = document.createElement("div");
+                    errorMessage.classList.add("message", "bot-message");
+                    errorMessage.innerHTML = `
+                        <div class="message-avatar bot-avatar">
+                            <img src="img/Favicon.png" alt="Bot" width="40" height="40" />
+                        </div>
+                        <div class="message-content">
+                            <div class="message-text">Lo siento, tengo problemas de conectividad. ¿Podrías intentarlo más tarde?</div>
+                            <div class="message-time">${new Date().toLocaleTimeString()}</div>
+                        </div>
+                    `;
+                    chatWindow.appendChild(errorMessage);
+                }
+            } else {
+                // Fallback: usar sistema local (sin estilos para distinguir)
+                const userMessage = document.createElement("div");
+                userMessage.classList.add("user-message");
+                userMessage.textContent = userInput;
+                chatWindow.appendChild(userMessage);
 
-            // Obtener respuesta del bot
-            const botResponse = await getBotResponse(userInput);
-            
-            // Reemplazar indicador de carga con la respuesta
-            chatWindow.removeChild(loadingIndicator);
-            
-            const botMessage = document.createElement("div");
-            botMessage.classList.add("bot-message");
-            botMessage.textContent = botResponse;
-            chatWindow.appendChild(botMessage);
+                // Mostrar indicador de carga
+                const loadingIndicator = document.createElement("div");
+                loadingIndicator.classList.add("bot-message");
+                loadingIndicator.innerHTML = '<span class="loading"></span> Procesando...';
+                chatWindow.appendChild(loadingIndicator);
+                
+                // Desplazarse al final del chat
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                // Obtener respuesta del bot local
+                const botResponse = await getBotResponse(userInput);
+                
+                // Reemplazar indicador de carga con la respuesta
+                chatWindow.removeChild(loadingIndicator);
+                
+                const botMessage = document.createElement("div");
+                botMessage.classList.add("bot-message");
+                botMessage.textContent = botResponse;
+                chatWindow.appendChild(botMessage);
+            }
 
             userInputField.value = ""; // Limpiar campo de entrada
             chatWindow.scrollTop = chatWindow.scrollHeight; // Desplazarse al final
