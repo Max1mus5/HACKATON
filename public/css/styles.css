@@ -1186,6 +1186,12 @@ html, body {
   border: 1px solid #dc3545;
 }
 
+#api-test-result.warning {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+  border: 1px solid #ffc107;
+}
+
 /* Loading Animation */
 .loading {
   display: inline-block;

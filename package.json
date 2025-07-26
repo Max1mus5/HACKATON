@@ -1,28 +1,32 @@
 {
   "name": "lean-chatbot-electromagnetic",
-  "version": "1.0.0",
-  "description": "Chatbot interactivo para consultas y pensado para el cliente desarrollado para LEAN",
-  "main": "public/chat.html",
+  "version": "2.0.0",
+  "description": "LEAN BOT - Asistente virtual inteligente con IA para INGE LEAN",
+  "main": "public/index.html",
   "scripts": {
     "dev": "npx serve public -l 3000",
     "start": "npx serve public",
     "build": "npm run validate && npm run copy-assets",
-    "validate": "echo 'Validating files...' && node -e \"console.log('✅ All files validated successfully')\"",
-    "copy-assets": "echo 'Assets ready for deployment'",
+    "validate": "echo 'Validating LEAN BOT files...' && node -e \"console.log('✅ LEAN BOT validated successfully')\"",
+    "copy-assets": "echo 'LEAN BOT assets ready for deployment'",
     "preview": "npx serve public -l 4173",
     "deploy": "npm run build && vercel --prod",
+    "deploy:dev": "vercel --dev",
     "lint": "echo 'No linting configured - static files'",
     "clean": "echo 'Cleaning build artifacts...'"
   },
   "keywords": [
+    "lean-bot",
     "chatbot",
-    "electromagnetic",
+    "artificial-intelligence",
     "gemini",
+    "fastapi",
+    "vercel",
     "javascript",
     "voice-recognition",
-    "lean"
+    "inge-lean"
   ],
-  "author": "7LEAN Team",
+  "author": "INGE LEAN Team",
   "license": "MIT",
   "devDependencies": {
     "serve": "^14.2.1"
@@ -32,10 +36,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lean/chatbot-electromagnetic.git"
+    "url": "git+https://github.com/Max1mus5/HACKATON.git"
   },
   "bugs": {
-    "url": "https://github.com/lean/chatbot-electromagnetic/issues"
+    "url": "https://github.com/Max1mus5/HACKATON/issues"
   },
-  "homepage": "https://github.com/lean/chatbot-electromagnetic#readme"
+  "homepage": "https://github.com/Max1mus5/HACKATON#readme"
 }

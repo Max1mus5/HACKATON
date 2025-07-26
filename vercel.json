@@ -4,87 +4,74 @@
   "github": {
     "silent": true
   },
-  "builds": [
+  "rewrites": [
     {
-      "src": "public/**/*",
-      "use": "@vercel/static"
+      "source": "/",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/public/login.html"
+    },
+    {
+      "source": "/chat",
+      "destination": "/public/chat.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/public/admin.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/public/dashboard.html"
+    },
+    {
+      "source": "/login.html",
+      "destination": "/public/login.html"
+    },
+    {
+      "source": "/chat.html",
+      "destination": "/public/chat.html"
+    },
+    {
+      "source": "/admin.html",
+      "destination": "/public/admin.html"
+    },
+    {
+      "source": "/dashboard.html",
+      "destination": "/public/dashboard.html"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/public/index.html"
+    },
+    {
+      "source": "/css/:path*",
+      "destination": "/public/css/:path*"
+    },
+    {
+      "source": "/js/:path*",
+      "destination": "/public/js/:path*"
+    },
+    {
+      "source": "/img/:path*",
+      "destination": "/public/img/:path*"
+    },
+    {
+      "source": "/data/:path*",
+      "destination": "/public/data/:path*"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index"
     }
   ],
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/login",
-      "dest": "/public/login.html"
-    },
-    {
-      "src": "/chat",
-      "dest": "/public/chat.html"
-    },
-    {
-      "src": "/admin",
-      "dest": "/public/admin.html"
-    },
-    {
-      "src": "/dashboard",
-      "dest": "/public/dashboard.html"
-    },
-    {
-      "src": "/login.html",
-      "dest": "/public/login.html"
-    },
-    {
-      "src": "/chat.html",
-      "dest": "/public/chat.html"
-    },
-    {
-      "src": "/admin.html",
-      "dest": "/public/admin.html"
-    },
-    {
-      "src": "/dashboard.html",
-      "dest": "/public/dashboard.html"
-    },
-    {
-      "src": "/index.html",
-      "dest": "/public/index.html"
-    },
-    {
-      "src": "/css/(.*)",
-      "dest": "/public/css/$1"
-    },
-    {
-      "src": "/js/(.*)",
-      "dest": "/public/js/$1"
-    },
-    {
-      "src": "/img/(.*)",
-      "dest": "/public/img/$1"
-    },
-    {
-      "src": "/data/(.*)",
-      "dest": "/public/data/$1"
-    },
-    {
-      "src": "/api/(.*)",
-      "dest": "/src/Backend/api.py"
-    },
-    {
-      "src": "/(.*\\.(css|js|png|jpg|jpeg|gif|svg|ico|json|txt|pdf))",
-      "dest": "/public/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/$1"
-    }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false,
   "functions": {
-    "src/Backend/api.py": {
-      "runtime": "python3.9"
+    "api/index.py": {
+      "runtime": "python3.9",
+      "memory": 1024
     }
-  }
+  },
+  "cleanUrls": true,
+  "trailingSlash": false
 }

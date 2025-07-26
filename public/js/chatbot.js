@@ -571,7 +571,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     
     // Guardar configuración de API
-    saveApiSettings.onclick = function() {
+    saveApiSettings.onclick = async function() {
         const apiKey = apiKeyInput.value.trim();
         const modelName = geminiModelSelect.value;
         
@@ -579,26 +579,86 @@ document.addEventListener("DOMContentLoaded", function() {
         localStorage.setItem('gemini_api_key', apiKey);
         localStorage.setItem('gemini_model', modelName);
         
-        // Actualizar configuración
+        // Actualizar configuración local
         config.geminiAPIKey = apiKey;
         config.geminiModel = modelName;
         config.apiTested = false; // Forzar nueva prueba con la nueva configuración
         
-        // Mostrar mensaje de éxito
-        apiTestResult.innerHTML = "Configuración guardada correctamente.";
-        apiTestResult.className = "mt-3 success";
-        
-        // Mostrar mensaje en el chat
-        const botMessage = document.createElement("div");
-        botMessage.classList.add("bot-message");
-        botMessage.textContent = "La configuración de la API de Gemini ha sido actualizada.";
-        chatWindow.appendChild(botMessage);
-        chatWindow.scrollTop = chatWindow.scrollHeight;
+        // Enviar API key al backend
+        if (apiKey) {
+            try {
+                // Determinar la URL base del backend
+                const backendURL = window.leanBotAPI ? window.leanBotAPI.baseURL : 
+                    (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? 
+                     window.location.origin : 'http://localhost:8000');
+                
+                const response = await fetch(`${backendURL}/config/gemini_api_key`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey
+                    })
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ API key enviada al backend:', result.message);
+                    
+                    // Mostrar mensaje de éxito en el modal
+                    apiTestResult.innerHTML = "✅ Configuración guardada y enviada al backend correctamente.";
+                    apiTestResult.className = "mt-3 success";
+                    
+                    // Mostrar mensaje en el chat
+                    const botMessage = document.createElement("div");
+                    botMessage.classList.add("bot-message");
+                    botMessage.innerHTML = `
+                        <strong>🔧 Configuración Actualizada</strong><br>
+                        La API key de Gemini ha sido configurada correctamente tanto en el frontend como en el backend.<br>
+                        <small>✅ LEAN BOT ahora está completamente integrado con Gemini AI</small>
+                    `;
+                    chatWindow.appendChild(botMessage);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                } else {
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.warn('⚠️ No se pudo enviar API key al backend:', error);
+                
+                // Mostrar mensaje de advertencia en el modal
+                apiTestResult.innerHTML = "⚠️ Configuración guardada localmente. Backend no disponible en este momento.";
+                apiTestResult.className = "mt-3 warning";
+                
+                // Mostrar mensaje en el chat
+                const botMessage = document.createElement("div");
+                botMessage.classList.add("bot-message");
+                botMessage.innerHTML = `
+                    <strong>🔧 Configuración Guardada</strong><br>
+                    La API key de Gemini ha sido guardada localmente.<br>
+                    <small>ℹ️ Se intentará sincronizar con el backend cuando esté disponible</small>
+                `;
+                chatWindow.appendChild(botMessage);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+        } else {
+            // Solo guardar localmente si no hay API key
+            apiTestResult.innerHTML = "Configuración guardada localmente.";
+            apiTestResult.className = "mt-3 success";
+            
+            // Mostrar mensaje en el chat
+            const botMessage = document.createElement("div");
+            botMessage.classList.add("bot-message");
+            botMessage.textContent = "Configuración actualizada. Para obtener mejores respuestas, considera agregar una API key de Gemini.";
+            chatWindow.appendChild(botMessage);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
         
         // Cerrar modal después de un momento
         setTimeout(() => {
             settingsModal.style.display = "none";
-        }, 1500);
+        }, 2000);
     }
     
     // Probar conexión con la API

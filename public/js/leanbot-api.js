@@ -1,11 +1,22 @@
 // Configuración para LEAN BOT integrado con backend
 class LeanBotAPI {
     constructor() {
-        this.baseURL = 'http://localhost:8000'; // URL del backend
+        // Detectar automáticamente la URL base según el entorno
+        this.baseURL = this.getBaseURL();
         this.currentUserId = this.getUserId();
         this.currentChatId = null;
         this.isBackendAvailable = false;
         this.checkBackendAvailability();
+    }
+
+    // Detectar la URL base según el entorno
+    getBaseURL() {
+        // En producción (Vercel), usar la URL actual sin puerto
+        if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+            return window.location.origin;
+        }
+        // En desarrollo local, usar localhost:8000
+        return 'http://localhost:8000';
     }
 
     // Generar o recuperar ID de usuario único
