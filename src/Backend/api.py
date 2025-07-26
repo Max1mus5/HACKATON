@@ -1,9 +1,4 @@
-@app.get('/usuarios/{doc_id}/chat', response_model=ChatOut)
-def obtener_chat_de_usuario(doc_id: int, db: Session = Depends(get_db)):
-    usuario = get_usuario_y_chat(db, doc_id)
-    if not usuario or not usuario.chat:
-        raise HTTPException(status_code=404, detail='Chat no encontrado para este usuario')
-    return usuario.chat
+
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from .database import engine, Base, Session as DBSession
@@ -20,6 +15,13 @@ def get_db():
         yield db
     finally:
         db.close()
+
+@app.get('/usuarios/{doc_id}/chat', response_model=ChatOut)
+def obtener_chat_de_usuario(doc_id: int, db: Session = Depends(get_db)):
+    usuario = get_usuario_y_chat(db, doc_id)
+    if not usuario or not usuario.chat:
+        raise HTTPException(status_code=404, detail='Chat no encontrado para este usuario')
+    return usuario.chat
 
 @app.post('/usuarios/', response_model=UsuarioOut)
 def crear_usuario_y_chat_endpoint(usuario: UsuarioCreate, db: Session = Depends(get_db)):
