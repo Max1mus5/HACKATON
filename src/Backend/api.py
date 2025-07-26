@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from .database import engine, Base, Session as DBSession
 from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut
 from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score
+from .repositories.chat_repository import get_all_chats_with_score
 
 app = FastAPI()
 
@@ -52,3 +53,11 @@ def obtener_score_endpoint(chat_id: str, db: Session = Depends(get_db)):
     if score is None:
         raise HTTPException(status_code=404, detail='Chat no encontrado')
     return {"score": score}
+
+# Nuevo endpoint: obtener todos los chats y su último score
+@app.get('/chats/', response_model=list[dict])
+def obtener_todos_los_chats_con_score(db: Session = Depends(get_db)):
+    """
+    Retorna una lista de objetos con: doc_id, mensajes (json) y score para cada chat.
+    """
+    return get_all_chats_with_score(db)
