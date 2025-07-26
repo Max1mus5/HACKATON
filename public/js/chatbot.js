@@ -350,9 +350,9 @@ async function askExternalLLM(question) {
 function greetingResponse(text) {
     const greetings = ["hola", "buenas", "saludos", "qué tal", "hey", "buenos días", "buenas tardes", "buenas noches"];
     const greetingReplies = [
-        "Hola, ¿cómo puedo ayudarte?",
-        "Hola, ¿en qué puedo asistirte?",
-        "Hola, dime cómo puedo ayudarte."
+        "¡Hola! Soy LEAN BOT, el asistente virtual de INGE LEAN. ¿Cómo puedo ayudarte?",
+        "¡Hola! Soy LEAN BOT de INGE LEAN. ¿En qué puedo asistirte?",
+        "¡Saludos! Soy LEAN BOT, tu asistente virtual de INGE LEAN. Dime, ¿cómo puedo ayudarte?"
     ];
     
     for (const word of text.split(' ')) {
@@ -367,9 +367,9 @@ function greetingResponse(text) {
 // Función para despedidas
 function farewellResponse() {
     const farewells = [
-        "Nos vemos, espero haberte ayudado.",
-        "Hasta pronto, ¡cuídate!",
-        "Chao, que tengas un buen día."
+        "¡Hasta pronto! Fue un placer ayudarte. Soy LEAN BOT de INGE LEAN, ¡cuídate!",
+        "¡Nos vemos! Espero haberte ayudado. LEAN BOT siempre a tu servicio.",
+        "¡Chao! Que tengas un excelente día. LEAN BOT de INGE LEAN estará aquí cuando me necesites."
     ];
     
     return farewells[Math.floor(Math.random() * farewells.length)];
@@ -377,11 +377,30 @@ function farewellResponse() {
 
 // Función principal que maneja las respuestas del chatbot
 async function getBotResponse(userInput) {
+    // Primero, intentar usar LEAN BOT API si está disponible
+    if (window.leanBotAPI && window.leanBotAPI.isBackendAvailable) {
+        try {
+            console.log('🤖 Usando LEAN BOT backend para respuesta...');
+            const fullResponse = await window.leanBotAPI.sendMessage(userInput);
+            
+            // Si es una respuesta del backend, retornar la respuesta del bot
+            if (fullResponse && fullResponse.response && !fullResponse.fallback) {
+                console.log('✅ Respuesta de LEAN BOT obtenida');
+                return fullResponse.response;
+            }
+        } catch (error) {
+            console.error('❌ Error con LEAN BOT backend, usando fallback local:', error);
+        }
+    }
+
+    // Fallback al sistema local original si LEAN BOT no está disponible
+    console.log('🔄 Usando sistema de respuestas local como fallback...');
+    
     // Asegurarse de que el corpus esté cargado
     if (!corpus) {
         const loaded = await loadCorpus();
         if (!loaded) {
-            return "No puedo responder en este momento. Hay un problema con mi base de conocimiento.";
+            return "Soy LEAN BOT de INGE LEAN. No puedo responder en este momento debido a problemas técnicos.";
         }
     }
     
@@ -395,18 +414,18 @@ async function getBotResponse(userInput) {
     
     // Verificar si es agradecimiento
     if (['gracias', 'muchas gracias', 'te lo agradezco'].includes(userText)) {
-        return "No hay de qué.";
+        return "De nada, para eso estoy aquí. Soy LEAN BOT, el asistente de INGE LEAN.";
     }
     
     // Verificar si es ayuda
     if (userText === 'ayuda') {
-        return "Puedes preguntarme sobre los participantes, objetivos, conclusiones, modelos, etc. También puedo responder preguntas generales si están dentro de mi conocimiento. Si quieres salir, escribe 'salir'.";
+        return "Hola, soy LEAN BOT, el asistente virtual de INGE LEAN. Puedes preguntarme sobre los participantes, objetivos, conclusiones, modelos, etc. También puedo responder preguntas generales. Si quieres salir, escribe 'salir'.";
     }
     
     // Verificar si es un saludo
     const greetingReply = greetingResponse(userText);
     if (greetingReply) {
-        return greetingReply;
+        return `${greetingReply} Soy LEAN BOT, tu asistente virtual de INGE LEAN.`;
     }
     
     // Detectar si la pregunta parece ser sobre el proyecto
@@ -434,7 +453,7 @@ async function getBotResponse(userInput) {
             console.log("Consultando a Gemini para respuesta externa...");
             const llmResponse = await askExternalLLM(userInput);
             if (llmResponse) {
-                return llmResponse + "\n\n(Respuesta generada por Gemini)";
+                return `${llmResponse}\n\n(Respuesta de LEAN BOT usando Gemini)`;
             }
         } catch (error) {
             console.error("Error al usar el LLM externo:", error);

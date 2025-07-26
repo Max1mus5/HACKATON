@@ -1,8 +1,13 @@
 from sqlalchemy.orm import Session
 from ..models.chat import Usuario, Chat
-
-from ..schemas.chat_schemas import UsuarioCreate, ChatCreate, ChatUpdate
+from ..schemas.chat_schemas import UsuarioCreate, ChatCreate, ChatUpdate, MessageRequest, MessageResponse
 from ..utils.gemini_sentiment import analizar_sentimiento_gemini
+from ..utils.gemini_chat import GeminiChatService
+from datetime import datetime
+import json
+
+# Instancia del servicio de Gemini Chat
+gemini_service = GeminiChatService()
 
 def create_usuario_y_chat(db: Session, doc_id: int):
     chat = Chat()
@@ -17,6 +22,77 @@ def create_usuario_y_chat(db: Session, doc_id: int):
 
 def get_usuario_y_chat(db: Session, doc_id: int):
     return db.query(Usuario).filter(Usuario.doc_id == doc_id).first()
+
+def process_message(db: Session, chat_id: str, message_request: MessageRequest) -> MessageResponse:
+    """
+    Procesa un mensaje completo: genera respuesta con Gemini, analiza sentimiento y guarda en BD
+    """
+    chat = db.query(Chat).filter(Chat.id == chat_id).first()
+    if not chat:
+        raise ValueError("Chat no encontrado")
+    
+    # Obtener historial de conversación
+    conversation_history = chat.mensajes if chat.mensajes else []
+    
+    # Generar respuesta con Gemini
+    bot_response = gemini_service.generate_response(
+        message_request.message, 
+        conversation_history
+    )
+    
+    # Analizar sentimiento del mensaje del usuario
+    try:
+        sentiment_result = analizar_sentimiento_gemini(message_request.message)
+        # Convertir sentimiento a score numérico
+        sentiment_score = convert_sentiment_to_score(sentiment_result)
+    except Exception as e:
+        print(f"Error en análisis de sentimiento: {e}")
+        sentiment_score = 5.0  # Neutral por defecto
+    
+    # Crear timestamp
+    timestamp = datetime.now().isoformat()
+    
+    # Crear objeto de mensaje completo
+    new_message = {
+        "message": message_request.message,
+        "score": sentiment_score,
+        "timestamp": timestamp,
+        "response": bot_response
+    }
+    
+    # Actualizar el chat con el nuevo mensaje
+    if not conversation_history:
+        chat.mensajes = [new_message]
+    else:
+        chat.mensajes.append(new_message)
+    
+    # Actualizar el score general del chat con el último sentimiento
+    chat.score = sentiment_score
+    
+    # Marcar el campo como modificado para SQLAlchemy
+    chat.mensajes = chat.mensajes.copy()
+    
+    db.commit()
+    db.refresh(chat)
+    
+    return MessageResponse(
+        message=message_request.message,
+        score=sentiment_score,
+        timestamp=timestamp,
+        response=bot_response
+    )
+
+def convert_sentiment_to_score(sentiment: str) -> float:
+    """
+    Convierte el resultado de sentimiento de texto a score numérico
+    """
+    sentiment_map = {
+        "positivo": 8.0,
+        "neutral": 5.0,
+        "neutro": 5.0,
+        "negativo": 2.0
+    }
+    return sentiment_map.get(sentiment.lower(), 5.0)
 
 def update_chat(db: Session, chat_id: str, chat_update: ChatUpdate):
     chat = db.query(Chat).filter(Chat.id == chat_id).first()
