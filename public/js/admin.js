@@ -281,7 +281,7 @@ class AdminPanel {
     // Action methods
     viewChatDetails(userId) {
         // Redirect to chat detail page
-        window.location.href = `chat-detail.html?userId=${userId}`;
+        window.location.href = `chat-detail?userId=${userId}`;
     }
     
     exportData() {

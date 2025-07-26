@@ -26,24 +26,8 @@
       "destination": "/public/dashboard.html"
     },
     {
-      "source": "/login.html",
-      "destination": "/public/login.html"
-    },
-    {
-      "source": "/chat.html",
-      "destination": "/public/chat.html"
-    },
-    {
-      "source": "/admin.html",
-      "destination": "/public/admin.html"
-    },
-    {
-      "source": "/dashboard.html",
-      "destination": "/public/dashboard.html"
-    },
-    {
-      "source": "/index.html",
-      "destination": "/public/index.html"
+      "source": "/chat-detail",
+      "destination": "/public/chat-detail.html"
     },
     {
       "source": "/css/:path*",
@@ -64,6 +48,38 @@
     {
       "source": "/api/:path*",
       "destination": "/api/index"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/login.html",
+      "destination": "/login",
+      "permanent": true
+    },
+    {
+      "source": "/chat.html",
+      "destination": "/chat",
+      "permanent": true
+    },
+    {
+      "source": "/admin.html",
+      "destination": "/admin",
+      "permanent": true
+    },
+    {
+      "source": "/dashboard.html",
+      "destination": "/dashboard",
+      "permanent": true
+    },
+    {
+      "source": "/chat-detail.html",
+      "destination": "/chat-detail",
+      "permanent": true
+    },
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
     }
   ],
   "functions": {

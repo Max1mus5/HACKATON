@@ -31,7 +31,7 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     if not chat:
         raise ValueError("Chat no encontrado")
     
-    # Obtener historial de conversación
+    # Obtener historial de conversación actual
     conversation_history = chat.mensajes if chat.mensajes else []
     
     # Generar respuesta con Gemini
@@ -52,7 +52,7 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     # Crear timestamp
     timestamp = datetime.now().isoformat()
     
-    # Crear objeto de mensaje completo
+    # Crear objeto de mensaje completo con la estructura especificada
     new_message = {
         "message": message_request.message,
         "score": sentiment_score,
@@ -60,17 +60,22 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
         "response": bot_response
     }
     
-    # Actualizar el chat con el nuevo mensaje
-    if not conversation_history:
+    # APPEND: Agregar el nuevo mensaje al historial
+    if conversation_history is None or not isinstance(conversation_history, list):
+        # Si no hay historial o no es una lista, crear nueva lista
         chat.mensajes = [new_message]
     else:
-        chat.mensajes.append(new_message)
+        # Hacer append del nuevo mensaje al historial existente
+        updated_messages = conversation_history.copy()
+        updated_messages.append(new_message)
+        chat.mensajes = updated_messages
     
     # Actualizar el score general del chat con el último sentimiento
     chat.score = sentiment_score
     
-    # Marcar el campo como modificado para SQLAlchemy
-    chat.mensajes = chat.mensajes.copy()
+    # Forzar actualización en SQLAlchemy para campos JSON
+    # Marcar explícitamente que el campo mensajes ha sido modificado
+    chat.mensajes = list(chat.mensajes) if chat.mensajes else []
     
     db.commit()
     db.refresh(chat)
@@ -134,6 +139,24 @@ def get_score(db: Session, chat_id: str):
     if chat:
         return chat.score
     return None
+
+def get_chat_messages(db: Session, chat_id: str):
+    """
+    Obtiene solo los mensajes de un chat específico
+    """
+    chat = db.query(Chat).filter(Chat.id == chat_id).first()
+    if chat:
+        return chat.mensajes if chat.mensajes else []
+    return []
+
+def get_chat_messages_by_user(db: Session, doc_id: int):
+    """
+    Obtiene los mensajes del chat de un usuario específico
+    """
+    usuario = get_usuario_y_chat(db, doc_id)
+    if usuario and usuario.chat:
+        return usuario.chat.mensajes if usuario.chat.mensajes else []
+    return []
 
 # Nueva función: obtener todos los chats y su último score
 def get_all_chats_with_score(db: Session):

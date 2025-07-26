@@ -109,7 +109,7 @@ class DashboardManager {
         
         // Simulate navigation delay for smooth transition
         setTimeout(() => {
-            window.location.href = 'chat.html';
+            window.location.href = 'chat';
         }, 300);
     }
     

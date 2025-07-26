@@ -227,7 +227,7 @@ handleLogin() {
     .then((data) => {
         // Guardar datos completos de la respuesta de la API
         this.saveSession(this.documento, data);
-        window.location.href = './chat.html';
+        window.location.href = './chat';
     })
     .catch((error) => {
         console.error("Login error:", error);
@@ -282,7 +282,7 @@ handleLogin() {
     static logout() {
         localStorage.removeItem('lean_session');
         localStorage.removeItem('lean_session_expiry');
-        window.location.href = './login.html';
+        window.location.href = './login';
     }
     
     // Get specific session data

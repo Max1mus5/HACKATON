@@ -138,7 +138,8 @@ class LeanBotAPI {
         }
 
         try {
-            const response = await fetch(`${this.baseURL}/usuarios/${this.currentUserId}/chat`, {
+            // Usar el nuevo endpoint que devuelve solo los mensajes
+            const response = await fetch(`${this.baseURL}/usuarios/${this.currentUserId}/messages`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -146,8 +147,9 @@ class LeanBotAPI {
             });
 
             if (response.ok) {
-                const chatData = await response.json();
-                return chatData.mensajes || [];
+                const data = await response.json();
+                console.log('📋 Historial obtenido:', data.mensajes ? data.mensajes.length : 0, 'mensajes');
+                return data.mensajes || [];
             } else {
                 console.warn('No se pudo obtener historial del chat');
                 return [];

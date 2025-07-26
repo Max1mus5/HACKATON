@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from .database import engine, Base, Session as DBSession
 from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut, MessageRequest, MessageResponse
 from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
-from .repositories.chat_repository import get_all_chats_with_score
+from .repositories.chat_repository import get_all_chats_with_score, get_chat_messages, get_chat_messages_by_user
 import os
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
@@ -55,6 +55,24 @@ def obtener_chat_de_usuario(doc_id: int, db: Session = Depends(get_db)):
     if not usuario or not usuario.chat:
         raise HTTPException(status_code=404, detail='Chat no encontrado para este usuario')
     return usuario.chat
+
+@app.get('/usuarios/{doc_id}/messages')
+def obtener_mensajes_de_usuario(doc_id: int, db: Session = Depends(get_db)):
+    """
+    Obtiene solo los mensajes del chat de un usuario específico
+    """
+    mensajes = get_chat_messages_by_user(db, doc_id)
+    return {"mensajes": mensajes}
+
+@app.get('/chats/{chat_id}/messages')
+def obtener_mensajes_de_chat(chat_id: str, db: Session = Depends(get_db)):
+    """
+    Obtiene solo los mensajes de un chat específico
+    """
+    mensajes = get_chat_messages(db, chat_id)
+    if mensajes is None:
+        raise HTTPException(status_code=404, detail='Chat no encontrado')
+    return {"mensajes": mensajes}
 
 @app.post('/usuarios/', response_model=UsuarioOut)
 def crear_usuario_y_chat_endpoint(usuario: UsuarioCreate, db: Session = Depends(get_db)):

@@ -1,10 +1,12 @@
 import requests
 import json
+import os
 from typing import Dict, Any
 
 class GeminiChatService:
-    def __init__(self, api_key: str = "AIzaSyAel_ApU1CspuRaeqT0Z6jc0CblthtMlbE"):
-        self.api_key = api_key
+    def __init__(self, api_key: str = None):
+        # Priorizar la API key en este orden: parámetro > variable global > variable de entorno
+        self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         self.model = "gemini-1.5-flash-latest"
         self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         
@@ -33,6 +35,11 @@ class GeminiChatService:
         Genera una respuesta usando Gemini API con el contexto de LEAN BOT
         """
         try:
+            # Verificar que tenemos una API key disponible
+            current_api_key = self.api_key or os.getenv("GEMINI_API_KEY")
+            if not current_api_key:
+                return "Lo siento, no tengo configurada la conexión con el servicio de chat. Por favor, configura la API key."
+            
             # Construir el prompt completo con contexto
             messages = [{"text": self.lean_context}]
             
@@ -65,7 +72,7 @@ class GeminiChatService:
             
             # Hacer la petición a Gemini API
             response = requests.post(
-                f"{self.base_url}?key={self.api_key}",
+                f"{self.base_url}?key={current_api_key}",
                 headers={"Content-Type": "application/json"},
                 json=data,
                 timeout=30

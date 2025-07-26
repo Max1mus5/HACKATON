@@ -11,6 +11,53 @@ const config = {
     apiWorking: false // Indicador de si la API está funcionando
 };
 
+// Función para cargar y mostrar el historial de mensajes
+async function loadChatHistory() {
+    if (window.leanBotAPI && window.leanBotAPI.isBackendAvailable) {
+        try {
+            console.log('📋 Cargando historial de chat...');
+            const chatHistory = await window.leanBotAPI.getChatHistory();
+            
+            const chatWindow = document.getElementById("chat-window");
+            if (chatHistory && chatHistory.length > 0) {
+                // Limpiar chat window antes de cargar historial
+                chatWindow.innerHTML = '';
+                
+                // Mostrar cada mensaje del historial con la nueva estructura
+                chatHistory.forEach(messageData => {
+                    // Verificar que el mensaje tiene la estructura correcta
+                    if (messageData.message && messageData.response) {
+                        // Mensaje del usuario
+                        const userMessage = document.createElement("div");
+                        userMessage.classList.add("user-message");
+                        userMessage.textContent = messageData.message;
+                        chatWindow.appendChild(userMessage);
+                        
+                        // Respuesta del bot
+                        const botMessage = document.createElement("div");
+                        botMessage.classList.add("bot-message");
+                        botMessage.textContent = messageData.response;
+                        chatWindow.appendChild(botMessage);
+                        
+                        // Log del score y timestamp para debugging (opcional)
+                        if (config.debugMode) {
+                            console.log(`Mensaje cargado - Score: ${messageData.score}, Timestamp: ${messageData.timestamp}`);
+                        }
+                    }
+                });
+                
+                // Desplazarse al final del chat
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+                console.log(`✅ Historial cargado: ${chatHistory.length} conversaciones`);
+            } else {
+                console.log('📋 No hay historial previo');
+            }
+        } catch (error) {
+            console.error('❌ Error al cargar historial:', error);
+        }
+    }
+}
+
 // Cargar la clave API desde localStorage si existe
 document.addEventListener("DOMContentLoaded", function() {
     // Cargar clave desde localStorage si está disponible
@@ -19,6 +66,11 @@ document.addEventListener("DOMContentLoaded", function() {
         config.geminiAPIKey = savedApiKey;
         console.log("Clave API cargada desde almacenamiento local");
     }
+    
+    // Cargar historial después de que LEAN BOT se inicialice
+    setTimeout(async () => {
+        await loadChatHistory();
+    }, 1000); // Esperar 1 segundo para que LEAN BOT se inicialice
 });
 
 // Cargar corpus de datos

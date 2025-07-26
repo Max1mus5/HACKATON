@@ -24,7 +24,7 @@
             </div>
 
             <nav class="sidebar-nav">
-                <a href="chat.html" class="nav-item active">
+                <a href="chat" class="nav-item active">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                         <polyline points="9,22 9,12 15,12 15,22"/>
@@ -32,7 +32,7 @@
                     <span>Chat Principal</span>
                 </a>
                 
-                <a href="dashboard.html" class="nav-item">
+                <a href="dashboard" class="nav-item">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 3v18h18"/>
                         <path d="M18 17V9"/>
@@ -79,7 +79,7 @@
                         <span>Chat Activo</span>
                     </div>
                 </div>
-                <button class="analysis-btn" onclick="window.location.href='dashboard.html'">
+                <button class="analysis-btn" onclick="window.location.href='dashboard'">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M3 3v18h18"/>
                         <path d="M18 17V9"/>
@@ -180,7 +180,7 @@
                 // Check session
                 const session = LoginManager.checkSession();
                 if (!session) {
-                    window.location.href = './login.html';
+                    window.location.href = './login';
                     return;
                 }
                 
@@ -249,15 +249,63 @@
                     if (userData.chat) {
                         this.sessionData.chat_id = userData.chat.id;
                         
-                        // Si hay mensajes previos, cargarlos
+                        // Si hay mensajes previos, cargarlos y mostrarlos
                         if (userData.chat.mensajes) {
                             try {
-                                this.chatHistory = JSON.parse(userData.chat.mensajes);
-                                console.log('Historial de chat cargado:', this.chatHistory);
+                                let mensajes = [];
+                                
+                                // Intentar parsear como JSON (formato nuevo)
+                                if (typeof userData.chat.mensajes === 'string') {
+                                    mensajes = JSON.parse(userData.chat.mensajes);
+                                } else if (Array.isArray(userData.chat.mensajes)) {
+                                    mensajes = userData.chat.mensajes;
+                                }
+                                
+                                // Mostrar mensajes en la interfaz
+                                if (mensajes.length > 0) {
+                                    console.log('📋 Cargando historial de chat:', mensajes.length, 'mensajes');
+                                    
+                                    // Limpiar chat actual
+                                    this.messagesContainer.innerHTML = '';
+                                    this.chatHistory = [];
+                                    
+                                    // Mostrar cada mensaje del historial
+                                    mensajes.forEach(messageData => {
+                                        // Mensaje del usuario
+                                        if (messageData.message) {
+                                            this.addUserMessage(messageData.message);
+                                            this.chatHistory.push({
+                                                role: 'user',
+                                                content: messageData.message,
+                                                timestamp: messageData.timestamp || new Date().toISOString()
+                                            });
+                                        }
+                                        
+                                        // Respuesta del bot
+                                        if (messageData.response) {
+                                            this.addBotMessage(messageData.response);
+                                            this.chatHistory.push({
+                                                role: 'assistant',
+                                                content: messageData.response,
+                                                timestamp: messageData.timestamp || new Date().toISOString()
+                                            });
+                                        }
+                                    });
+                                    
+                                    // Desplazarse al final del chat
+                                    this.scrollToBottom();
+                                    console.log('✅ Historial cargado y mostrado');
+                                } else {
+                                    console.log('📋 No hay historial previo');
+                                    this.chatHistory = [];
+                                }
                             } catch (error) {
                                 console.error('Error al parsear mensajes:', error);
                                 this.chatHistory = [];
                             }
+                        } else {
+                            console.log('📋 No hay mensajes previos');
+                            this.chatHistory = [];
                         }
 
                         // Actualizar localStorage con la información más reciente
@@ -496,34 +544,37 @@
                     // Mostrar indicador de escritura
                     this.showTypingIndicator();
 
-                    // Usar el sistema de chatbot existente para obtener respuesta
-                    const botResponse = await getBotResponse(userMessage);
-
-                    // Preparar datos para enviar al backend
-                    const chatUpdate = {
-                        mensajes: JSON.stringify(this.chatHistory),
-                        score: null // Se puede calcular en el backend
-                    };
-
-                    console.log('Enviando mensaje a la API:', {
-                        chat_id: this.sessionData.chat_id,
-                        data: chatUpdate
-                    });
-
-                    // Actualizar el chat en el backend
-                    const response = await fetch(`http://localhost:8000/chats/${this.sessionData.chat_id}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(chatUpdate)
-                    });
-
-                    if (!response.ok) {
-                        console.warn(`Error en la API: ${response.status}, continuando con respuesta local`);
+                    let botResponse;
+                    
+                    // Usar LEAN BOT API en lugar del sistema legacy
+                    if (window.leanBotAPI && window.leanBotAPI.isBackendAvailable) {
+                        try {
+                            console.log('🤖 Usando LEAN BOT para procesar mensaje...');
+                            const leanBotResponse = await window.leanBotAPI.sendMessage(userMessage);
+                            
+                            if (leanBotResponse && leanBotResponse.response) {
+                                botResponse = leanBotResponse.response;
+                                console.log('✅ Respuesta de LEAN BOT obtenida');
+                            } else {
+                                throw new Error('No se obtuvo respuesta de LEAN BOT');
+                            }
+                        } catch (error) {
+                            console.error('❌ Error con LEAN BOT, usando fallback:', error);
+                            // Fallback a respuesta local si está disponible getBotResponse
+                            if (typeof getBotResponse === 'function') {
+                                botResponse = await getBotResponse(userMessage);
+                            } else {
+                                botResponse = await this.generateSmartResponse(userMessage);
+                            }
+                        }
                     } else {
-                        const updatedChat = await response.json();
-                        console.log('Chat actualizado:', updatedChat);
+                        console.log('🔄 LEAN BOT no disponible, usando respuesta local');
+                        // Fallback a respuesta local
+                        if (typeof getBotResponse === 'function') {
+                            botResponse = await getBotResponse(userMessage);
+                        } else {
+                            botResponse = await this.generateSmartResponse(userMessage);
+                        }
                     }
 
                     // Remover indicador de escritura

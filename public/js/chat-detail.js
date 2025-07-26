@@ -162,7 +162,7 @@ class ChatDetailManager {
         
         if (backButton) {
             backButton.addEventListener('click', () => {
-                window.location.href = 'admin.html';
+                window.location.href = 'admin';
             });
         }
         

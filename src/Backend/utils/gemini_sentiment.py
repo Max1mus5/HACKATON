@@ -7,10 +7,11 @@ def analizar_sentimiento_gemini(texto, api_key=None):
     """
     # Usar la API key proporcionada o la del entorno
     if not api_key:
-        api_key = os.environ.get("GEMINI_API_KEY", "AIzaSyAel_ApU1CspuRaeqT0Z6jc0CblthtMlbE")
+        api_key = os.environ.get("GEMINI_API_KEY")
     
     if not api_key:
-        raise Exception("API key de Gemini no configurada.")
+        print("Warning: API key de Gemini no configurada, usando sentimiento neutral")
+        return "neutro"
     
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
     
