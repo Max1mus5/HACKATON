@@ -89,7 +89,14 @@ class AdminPanel {
         const recentChatsData = [];
         
         this.allChats.forEach(chat => {
-            uniqueUsers.add(chat.usuario_doc_id);
+            // Validar que el chat tenga la estructura mínima requerida
+            if (!chat || (!chat.usuario_doc_id && !chat.usuario_id)) {
+                console.warn('⚠️ Chat sin ID de usuario válido:', chat);
+                return; // Saltar este chat
+            }
+            
+            const userId = chat.usuario_doc_id || chat.usuario_id;
+            uniqueUsers.add(userId);
             
             // Procesar mensajes si existen
             if (chat.mensajes) {
@@ -133,8 +140,8 @@ class AdminPanel {
                     const sentiment = this.scoresToSentiment(messages.map(m => m.score || 5));
                     
                     recentChatsData.push({
-                        id: chat.id,
-                        user: chat.usuario_doc_id.toString(),
+                        id: chat.id || 'unknown',
+                        user: (chat.usuario_doc_id || chat.usuario_id || 'Usuario desconocido').toString(),
                         messages: messages.length,
                         sentiment: sentiment,
                         timestamp: lastMessage.timestamp || new Date().toISOString(),
