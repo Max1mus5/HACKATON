@@ -594,7 +594,7 @@
                     // Actualizar chat con la respuesta del bot si el backend está disponible
                     try {
                         const finalChatUpdate = {
-                            mensajes: JSON.stringify(this.chatHistory),
+                            mensajes: this.chatHistory, // Enviar como array, no como string JSON
                             score: null
                         };
 

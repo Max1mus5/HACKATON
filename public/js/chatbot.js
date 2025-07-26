@@ -60,12 +60,31 @@ async function loadChatHistory() {
 
 // Cargar la clave API desde localStorage si existe
 document.addEventListener("DOMContentLoaded", function() {
-    // Cargar clave desde localStorage si está disponible
+    // Cargar clave desde localStorage si está disponible (esto tiene prioridad)
     const savedApiKey = localStorage.getItem('gemini_api_key');
+    const savedModel = localStorage.getItem('gemini_model');
+    
     if (savedApiKey) {
         config.geminiAPIKey = savedApiKey;
-        console.log("Clave API cargada desde almacenamiento local");
+        console.log("✅ Clave API cargada desde localStorage");
+        
+        // Actualizar también en otros lugares si existen
+        if (window.ENV_CONFIG && window.ENV_CONFIG.geminiAPIKey !== undefined) {
+            window.ENV_CONFIG.geminiAPIKey = savedApiKey;
+        }
+        if (window.API_CONFIG && window.API_CONFIG.geminiApiKey !== undefined) {
+            window.API_CONFIG.geminiApiKey = savedApiKey;
+        }
     }
+    
+    if (savedModel) {
+        config.geminiModel = savedModel;
+        console.log("✅ Modelo Gemini cargado desde localStorage:", savedModel);
+    }
+    
+    // Resetear estados de API para forzar nueva verificación
+    config.apiTested = false;
+    config.apiWorking = false;
     
     // Cargar historial después de que LEAN BOT se inicialice
     setTimeout(async () => {
@@ -598,7 +617,9 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Cargar configuración guardada al inicio
     if (localStorage.getItem('gemini_api_key')) {
-        apiKeyInput.value = localStorage.getItem('gemini_api_key');
+        const savedKey = localStorage.getItem('gemini_api_key');
+        apiKeyInput.value = savedKey;
+        originalApiKeyValue = savedKey; // Actualizar también la variable de control
     }
     
     if (localStorage.getItem('gemini_model')) {
@@ -607,6 +628,19 @@ document.addEventListener("DOMContentLoaded", function() {
     
     // Abrir modal de configuración
     settingsButton.onclick = function() {
+        // Recargar valores más recientes cada vez que se abre el modal
+        const currentApiKey = localStorage.getItem('gemini_api_key') || config.geminiAPIKey || '';
+        const currentModel = localStorage.getItem('gemini_model') || config.geminiModel || 'gemini-1.5-flash-latest';
+        
+        apiKeyInput.value = currentApiKey;
+        originalApiKeyValue = currentApiKey;
+        geminiModelSelect.value = currentModel;
+        
+        console.log('🔧 Modal abierto con configuración actual:', {
+            hasApiKey: currentApiKey ? 'Sí' : 'No',
+            model: currentModel
+        });
+        
         settingsModal.style.display = "block";
     }
     
@@ -631,15 +665,30 @@ document.addEventListener("DOMContentLoaded", function() {
         console.log('📝 API Key presente:', apiKey ? 'Sí' : 'No');
         console.log('📝 Modelo seleccionado:', modelName);
         
-        // Guardar en localStorage
-        localStorage.setItem('gemini_api_key', apiKey);
-        localStorage.setItem('gemini_model', modelName);
-        console.log('💾 Configuración guardada en localStorage');
+        // Limpiar cualquier configuración anterior para evitar conflictos
+        config.apiTested = false;
+        config.apiWorking = false;
         
-        // Actualizar configuración local
+        // Actualizar configuración local PRIMERO
         config.geminiAPIKey = apiKey;
         config.geminiModel = modelName;
-        config.apiTested = false; // Forzar nueva prueba con la nueva configuración
+        
+        // Guardar en localStorage (esto sobrescribirá cualquier valor anterior)
+        localStorage.setItem('gemini_api_key', apiKey);
+        localStorage.setItem('gemini_model', modelName);
+        console.log('💾 Configuración actualizada en localStorage');
+        
+        // Actualizar también en ENV_CONFIG si existe
+        if (window.ENV_CONFIG && window.ENV_CONFIG.geminiAPIKey !== undefined) {
+            window.ENV_CONFIG.geminiAPIKey = apiKey;
+            console.log('🔧 API Key actualizada en ENV_CONFIG');
+        }
+        
+        // Actualizar en API_CONFIG si existe
+        if (window.API_CONFIG && window.API_CONFIG.geminiApiKey !== undefined) {
+            window.API_CONFIG.geminiApiKey = apiKey;
+            console.log('🔧 API Key actualizada en API_CONFIG');
+        }
         
         // Enviar API key al backend
         if (apiKey) {
@@ -804,15 +853,19 @@ document.addEventListener("DOMContentLoaded", function() {
         `;
         apiTestResult.className = "mt-3";
         
-        // Actualizar configuración temporalmente
+        // Guardar configuración original para restaurar si es necesario
         const originalKey = config.geminiAPIKey;
         const originalModel = config.geminiModel;
+        const originalTested = config.apiTested;
+        const originalWorking = config.apiWorking;
         
         try {
             console.log('📝 Configurando API temporalmente para prueba...');
+            // Actualizar configuración temporalmente con los valores del modal
             config.geminiAPIKey = apiKey;
             config.geminiModel = modelName;
             config.apiTested = false;
+            config.apiWorking = false;
             
             // Probar API directamente
             console.log('📡 Enviando prueba a Gemini API...');
@@ -864,6 +917,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 // Restaurar configuración original si la prueba falla
                 config.geminiAPIKey = originalKey;
                 config.geminiModel = originalModel;
+                config.apiTested = originalTested;
+                config.apiWorking = originalWorking;
             }
         } catch (error) {
             console.error("❌ Error durante la prueba de API:", error);
@@ -880,6 +935,8 @@ document.addEventListener("DOMContentLoaded", function() {
             // Restaurar configuración original si hay un error
             config.geminiAPIKey = originalKey;
             config.geminiModel = originalModel;
+            config.apiTested = originalTested;
+            config.apiWorking = originalWorking;
         }
     }
 
