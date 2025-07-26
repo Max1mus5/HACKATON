@@ -6,8 +6,25 @@ from .database import engine, Base, Session as DBSession
 from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut, MessageRequest, MessageResponse
 from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
 from .repositories.chat_repository import get_all_chats_with_score
+import os
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
+
+# Variable global temporal para almacenar la API key recibida
+GEMINI_API_KEY_RUNTIME = None
+# Endpoint para recibir y almacenar la API key de Gemini
+@app.post('/config/gemini_api_key')
+def set_gemini_api_key(payload: dict):
+    """
+    Recibe un JSON con {"api_key": "..."} y la almacena en una variable global para uso en el backend.
+    """
+    global GEMINI_API_KEY_RUNTIME
+    api_key = payload.get("api_key")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Falta el campo 'api_key'")
+    GEMINI_API_KEY_RUNTIME = api_key
+    os.environ["GEMINI_API_KEY"] = api_key  # Para que la función de sentimiento la use
+    return {"message": "API key almacenada correctamente"}
 
 # Configuración de CORS
 app.add_middleware(
