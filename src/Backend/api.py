@@ -19,10 +19,7 @@ if not os.getenv("GEMINI_API_KEY"):
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
 
-# Health check endpoint
-@app.get('/')
-def health_check():
-    return {"message": "LEAN BOT API funcionando correctamente", "status": "healthy"}
+# Health check endpoint (eliminado duplicado)
 
 # Variable global temporal para almacenar la API key recibida
 GEMINI_API_KEY_RUNTIME = None
@@ -166,6 +163,11 @@ Base.metadata.create_all(bind=engine)
 def health_check():
     """Endpoint de prueba para verificar que la API funciona y CORS está configurado"""
     return {"message": "LEAN BOT API funcionando correctamente", "cors": "enabled", "version": "2.0"}
+
+@app.get("/health")
+def health_check_alt():
+    """Endpoint alternativo de health check"""
+    return {"message": "LEAN BOT API funcionando correctamente", "status": "healthy"}
 
 def get_db():
     db = DBSession()
