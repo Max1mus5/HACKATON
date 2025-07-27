@@ -27,13 +27,15 @@ GEMINI_API_KEY_RUNTIME = None
 # Endpoint para configurar API key de Gemini
 @app.post('/config/gemini_api_key')
 def configure_gemini_api_key(request: dict):
+    """
+    Recibe un JSON con {"api_key": "..."} y la almacena en una variable global para uso en el backend.
+    """
     global GEMINI_API_KEY_RUNTIME
     try:
         api_key = request.get('api_key')
         if api_key and api_key.strip():
             GEMINI_API_KEY_RUNTIME = api_key.strip()
             # También configurar en el entorno para que lo use gemini_chat.py
-            import os
             os.environ["GEMINI_API_KEY"] = api_key.strip()
             print(f"✅ API key de Gemini configurada: {api_key[:10]}...")
             return {"status": "success", "message": "API key configurada correctamente"}
@@ -42,21 +44,6 @@ def configure_gemini_api_key(request: dict):
     except Exception as e:
         print(f"❌ Error configurando API key: {e}")
         return {"status": "error", "message": str(e)}
-
-# Función de scoring movida a utils/scoring.py para evitar imports circulares
-# Endpoint para recibir y almacenar la API key de Gemini
-@app.post('/config/gemini_api_key')
-def set_gemini_api_key(payload: dict):
-    """
-    Recibe un JSON con {"api_key": "..."} y la almacena en una variable global para uso en el backend.
-    """
-    global GEMINI_API_KEY_RUNTIME
-    api_key = payload.get("api_key")
-    if not api_key:
-        raise HTTPException(status_code=400, detail="Falta el campo 'api_key'")
-    GEMINI_API_KEY_RUNTIME = api_key
-    os.environ["GEMINI_API_KEY"] = api_key  # Para que la función de sentimiento la use
-    return {"message": "API key almacenada correctamente"}
 
 # Configuración de CORS
 app.add_middleware(

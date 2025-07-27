@@ -90,12 +90,11 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     print(f"✅ Mensajes después del append: {len(chat.mensajes) if chat.mensajes else 0}")
     
     # Actualizar el score general del chat con el último sentimiento
-    chat.score = sentiment_score
+    chat.score = float(sentiment_score)
     
     # CRÍTICO: Marcar explícitamente que los campos JSON han sido modificados
     # Esto es necesario para que SQLAlchemy detecte cambios en campos JSON
     flag_modified(chat, 'mensajes')
-    flag_modified(chat, 'score')
     
     print(f"🔄 Guardando en base de datos...")
     
