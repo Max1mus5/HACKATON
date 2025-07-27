@@ -22,7 +22,7 @@ except ImportError:
 
 # Configurar variables de entorno para Vercel
 if not os.environ.get("GEMINI_API_KEY"):
-    os.environ["GEMINI_API_KEY"] = "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0"
+    os.environ["GEMINI_API_KEY"] = "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0"
 
 # Función handler para Vercel
 def handler(request, response):

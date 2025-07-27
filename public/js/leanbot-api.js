@@ -103,7 +103,7 @@ class LeanBotAPI {
                     apiKey = process.env.GEMINI_API_KEY;
                 } else {
                     // API key por defecto
-                    apiKey = "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0";
+                    apiKey = "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0";
                 }
             }
             

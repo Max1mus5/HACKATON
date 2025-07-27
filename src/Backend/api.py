@@ -15,7 +15,7 @@ import os
 
 # Configurar API key por defecto si no existe
 if not os.getenv("GEMINI_API_KEY"):
-    os.environ["GEMINI_API_KEY"] = "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0"
+    os.environ["GEMINI_API_KEY"] = "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0"
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
 

@@ -20,7 +20,7 @@ def calculate_message_score(mensaje_usuario, respuesta_bot):
     """
     try:
         # Obtener API key desde variable de entorno o runtime
-        api_key = os.getenv("GEMINI_API_KEY", "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0")
+        api_key = os.getenv("GEMINI_API_KEY", "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0")
         
         # Intentar obtener desde variable global si existe
         try:
