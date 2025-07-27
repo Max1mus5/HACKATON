@@ -151,16 +151,29 @@ class DashboardManager {
         const sortedDays = Object.keys(dayGroups).sort();
         const last7Days = sortedDays.slice(-7);
         
-        this.trendData = last7Days.map(day => {
-            const dayData = dayGroups[day];
-            const avgScore = dayData.scores.reduce((sum, score) => sum + score, 0) / dayData.scores.length;
-            // Convertir score promedio a porcentaje (0-10 -> 0-100)
-            return Math.round((avgScore / 10) * 100);
-        });
+        // Crear array con los últimos 7 días (incluyendo días sin datos)
+        const today = new Date();
+        this.trendData = [];
+        this.dayLabels = [];
         
-        // Si no hay suficientes días, llenar con valores por defecto
-        while (this.trendData.length < 7) {
-            this.trendData.unshift(50); // Valor neutral
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const dayKey = date.toISOString().split('T')[0];
+            
+            // Obtener nombre del día
+            const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            this.dayLabels.push(dayNames[date.getDay()]);
+            
+            if (dayGroups[dayKey]) {
+                const dayData = dayGroups[dayKey];
+                const avgScore = dayData.scores.reduce((sum, score) => sum + score, 0) / dayData.scores.length;
+                // Convertir score promedio a porcentaje (0-10 -> 0-100)
+                this.trendData.push(Math.round((avgScore / 10) * 100));
+            } else {
+                // Día sin datos
+                this.trendData.push(50); // Valor neutral
+            }
         }
         
         console.log('📊 Datos procesados:', {
@@ -217,14 +230,15 @@ class DashboardManager {
         const chartBars = document.querySelectorAll('.chart-bar');
         
         chartBars.forEach((barContainer, index) => {
-            if (this.trendData[index] !== undefined) {
+            if (this.trendData[index] !== undefined && this.dayLabels[index] !== undefined) {
                 barContainer.setAttribute('data-height', this.trendData[index]);
+                barContainer.setAttribute('data-day', this.dayLabels[index]);
                 
-                // Actualizar día
-                const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-                const today = new Date();
-                const dayIndex = (today.getDay() - this.trendData.length + index + 7) % 7;
-                barContainer.setAttribute('data-day', dayNames[dayIndex]);
+                // Actualizar el contenido del día si existe
+                const dayLabel = barContainer.querySelector('.day-label');
+                if (dayLabel) {
+                    dayLabel.textContent = this.dayLabels[index];
+                }
             }
         });
     }

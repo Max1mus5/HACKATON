@@ -144,6 +144,8 @@ class AIConfigUI {
         }
 
         // Guardar en localStorage
+        localStorage.setItem('ai_provider', provider);
+        
         if (apiKey) {
             localStorage.setItem(`ai_api_key_${provider}`, apiKey);
         } else {

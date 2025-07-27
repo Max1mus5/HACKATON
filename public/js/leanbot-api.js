@@ -7,9 +7,8 @@ class LeanBotAPI {
         this.currentChatId = null;
         this.isBackendAvailable = false;
         
-        // Configuración de IA
-        this.aiProvider = 'gemini'; // Por defecto
-        this.customApiKey = null;
+        // Configuración de IA - cargar desde localStorage
+        this.loadAIConfiguration();
         
         this.checkBackendAvailability();
     }
@@ -49,6 +48,30 @@ class LeanBotAPI {
             console.log(`🔄 Generando ID temporal: ${userId}`);
         }
         return parseInt(userId);
+    }
+
+    // Cargar configuración de IA desde localStorage
+    loadAIConfiguration() {
+        // Cargar proveedor de IA
+        this.aiProvider = localStorage.getItem('ai_provider') || 'gemini';
+        
+        // Cargar API key personalizada si existe
+        const apiKeyKey = `ai_api_key_${this.aiProvider}`;
+        this.customApiKey = localStorage.getItem(apiKeyKey) || null;
+        
+        console.log(`🤖 Configuración de IA cargada: ${this.aiProvider}${this.customApiKey ? ' (con API key personalizada)' : ''}`);
+    }
+
+    // Guardar configuración de IA en localStorage
+    saveAIConfiguration() {
+        localStorage.setItem('ai_provider', this.aiProvider);
+        
+        if (this.customApiKey) {
+            const apiKeyKey = `ai_api_key_${this.aiProvider}`;
+            localStorage.setItem(apiKeyKey, this.customApiKey);
+        }
+        
+        console.log(`💾 Configuración de IA guardada: ${this.aiProvider}`);
     }
 
     // Limpiar datos específicos del chat para nueva sesión
@@ -337,8 +360,19 @@ class LeanBotAPI {
         this.aiProvider = provider;
         this.customApiKey = apiKey;
         
+        // Guardar configuración en localStorage
+        this.saveAIConfiguration();
+        
         console.log(`🤖 Proveedor de IA configurado: ${provider}${apiKey ? ' (con API key personalizada)' : ''}`);
         return true;
+    }
+    
+    // Obtener configuración actual de IA
+    getCurrentAIConfig() {
+        return {
+            provider: this.aiProvider,
+            apiKey: this.customApiKey
+        };
     }
     
     // Obtener proveedores disponibles

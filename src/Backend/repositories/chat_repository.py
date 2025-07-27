@@ -61,16 +61,25 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     bot_response = ai_result["response"]
     ai_provider_used = ai_result["provider"]
     
-    # Analizar sentimiento y calcular score usando Gemini con contexto completo
+    # Analizar sentimiento y calcular score usando el proveedor seleccionado
     try:
         # Importar la función de scoring mejorada
         from ..utils.scoring import calculate_message_score
-        sentiment_score = calculate_message_score(message_request.message, bot_response)
+        sentiment_score = calculate_message_score(
+            message_request.message, 
+            bot_response,
+            ai_provider=message_request.ai_provider or "gemini",
+            api_key=message_request.api_key
+        )
     except Exception as e:
         print(f"Error en análisis de sentimiento: {e}")
         # Fallback: usar análisis básico
         try:
-            sentiment_result = analizar_sentimiento_gemini(message_request.message)
+            if message_request.ai_provider == "mistral":
+                from ..utils.scoring import analyze_sentiment_basic
+                sentiment_result = analyze_sentiment_basic(message_request.message)
+            else:
+                sentiment_result = analizar_sentimiento_gemini(message_request.message)
             sentiment_score = convert_sentiment_to_score(sentiment_result)
         except:
             sentiment_score = 5.0  # Neutral por defecto
