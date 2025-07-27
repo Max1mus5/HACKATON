@@ -281,7 +281,7 @@ handleLogin() {
         }
     }
     
-    // Logout function - Limpia completamente localStorage para nueva sesión
+    // Logout function - Limpia datos de sesión pero mantiene lean_bot_user_id para persistencia del historial
     static logout() {
         console.log('Iniciando cierre de sesión...');
         
@@ -289,8 +289,8 @@ handleLogin() {
         localStorage.removeItem('lean_session');
         localStorage.removeItem('lean_session_expiry');
         
-        // Limpiar datos del leanBotAPI y chat
-        localStorage.removeItem('lean_bot_user_id');
+        // Limpiar datos del chat PERO MANTENER lean_bot_user_id para persistencia del historial
+        // localStorage.removeItem('lean_bot_user_id'); // NO eliminar - necesario para historial
         localStorage.removeItem('currentChatId');
         localStorage.removeItem('chatHistory');
         localStorage.removeItem('userMessages');
@@ -306,11 +306,11 @@ handleLogin() {
         localStorage.removeItem('gemini_api_key');
         localStorage.removeItem('api_config');
         
-        // Limpiar cualquier dato relacionado con prefijos conocidos
+        // Limpiar cualquier dato relacionado con prefijos conocidos EXCEPTO lean_bot_user_id
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && (
+            if (key && key !== 'lean_bot_user_id' && (
                 key.startsWith('lean_') || 
                 key.startsWith('chat_') || 
                 key.startsWith('bot_') ||
@@ -327,7 +327,7 @@ handleLogin() {
             }
         }
         
-        // Remover todas las claves identificadas
+        // Remover todas las claves identificadas (excepto lean_bot_user_id)
         keysToRemove.forEach(key => {
             localStorage.removeItem(key);
             console.log(`Removido: ${key}`);
