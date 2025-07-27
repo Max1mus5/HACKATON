@@ -4,6 +4,7 @@ from ..models.chat import Usuario, Chat
 from ..schemas.chat_schemas import UsuarioCreate, ChatCreate, ChatUpdate, MessageRequest, MessageResponse
 from ..utils.gemini_sentiment import analizar_sentimiento_gemini
 from ..utils.gemini_chat import GeminiChatService
+from ..utils.ai_chat_service import AIChatService
 from ..utils.scoring import calculate_message_score
 from datetime import datetime
 import json
@@ -13,6 +14,10 @@ import os
 def get_gemini_service():
     """Obtiene una instancia actualizada del servicio de Gemini con la API key más reciente"""
     return GeminiChatService()
+
+def get_ai_service():
+    """Obtiene una instancia del servicio unificado de IA"""
+    return AIChatService()
 
 def create_usuario_y_chat(db: Session, doc_id):
     # Convertir doc_id a string para consistencia
@@ -35,7 +40,7 @@ def get_usuario_y_chat(db: Session, doc_id):
 
 def process_message(db: Session, chat_id: str, message_request: MessageRequest) -> MessageResponse:
     """
-    Procesa un mensaje completo: genera respuesta con Gemini, analiza sentimiento y guarda en BD
+    Procesa un mensaje completo: genera respuesta con IA (Gemini o Mistral), analiza sentimiento y guarda en BD
     """
     chat = db.query(Chat).filter(Chat.id == chat_id).first()
     if not chat:
@@ -44,12 +49,17 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     # Obtener historial de conversación actual
     conversation_history = chat.mensajes if chat.mensajes else []
     
-    # Generar respuesta con Gemini (usando instancia actualizada)
-    gemini_service = get_gemini_service()
-    bot_response = gemini_service.generate_response(
+    # Generar respuesta usando el servicio unificado de IA
+    ai_service = get_ai_service()
+    ai_result = ai_service.generate_response(
         message_request.message, 
-        conversation_history
+        conversation_history,
+        provider=message_request.ai_provider,
+        api_key=message_request.api_key
     )
+    
+    bot_response = ai_result["response"]
+    ai_provider_used = ai_result["provider"]
     
     # Analizar sentimiento y calcular score usando Gemini con contexto completo
     try:
@@ -121,9 +131,10 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     
     return MessageResponse(
         message=message_request.message,
+        response=bot_response,
         score=sentiment_score,
-        timestamp=timestamp,
-        response=bot_response
+        ai_provider=ai_provider_used,
+        timestamp=timestamp
     )
 
 def convert_sentiment_to_score(sentiment: str) -> float:

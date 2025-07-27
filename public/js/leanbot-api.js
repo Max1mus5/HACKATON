@@ -6,6 +6,11 @@ class LeanBotAPI {
         this.currentUserId = this.getUserId();
         this.currentChatId = null;
         this.isBackendAvailable = false;
+        
+        // Configuración de IA
+        this.aiProvider = 'gemini'; // Por defecto
+        this.customApiKey = null;
+        
         this.checkBackendAvailability();
     }
 
@@ -203,7 +208,9 @@ class LeanBotAPI {
                 },
                 body: JSON.stringify({
                     message: userMessage,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    ai_provider: this.aiProvider,
+                    api_key: this.customApiKey
                 })
             });
 
@@ -316,6 +323,89 @@ class LeanBotAPI {
             return null;
         }
     }
+
+    // MÉTODOS PARA CONFIGURACIÓN DE IA
+    
+    // Configurar proveedor de IA
+    setAIProvider(provider, apiKey = null) {
+        const validProviders = ['gemini', 'mistral'];
+        if (!validProviders.includes(provider)) {
+            console.error(`❌ Proveedor no válido: ${provider}. Opciones: ${validProviders.join(', ')}`);
+            return false;
+        }
+        
+        this.aiProvider = provider;
+        this.customApiKey = apiKey;
+        
+        console.log(`🤖 Proveedor de IA configurado: ${provider}${apiKey ? ' (con API key personalizada)' : ''}`);
+        return true;
+    }
+    
+    // Obtener proveedores disponibles
+    async getAvailableProviders() {
+        if (!this.isBackendAvailable) {
+            return { providers: ['gemini'], default: 'gemini' };
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}/ai/providers`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('🤖 Proveedores disponibles:', result);
+                return result;
+            } else {
+                return { providers: ['gemini'], default: 'gemini' };
+            }
+        } catch (error) {
+            console.error('Error al obtener proveedores:', error);
+            return { providers: ['gemini'], default: 'gemini' };
+        }
+    }
+    
+    // Probar conexión con un proveedor específico
+    async testAIProvider(provider, apiKey = null) {
+        if (!this.isBackendAvailable) {
+            return { provider, working: false, error: 'Backend no disponible' };
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}/ai/test`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    provider: provider,
+                    api_key: apiKey
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log(`🧪 Prueba de ${provider}:`, result);
+                return result;
+            } else {
+                return { provider, working: false, error: 'Error en la petición' };
+            }
+        } catch (error) {
+            console.error(`Error al probar ${provider}:`, error);
+            return { provider, working: false, error: error.message };
+        }
+    }
+    
+    // Obtener configuración actual
+    getCurrentAIConfig() {
+        return {
+            provider: this.aiProvider,
+            hasCustomApiKey: !!this.customApiKey
+        };
+    }
 }
 
 // Inicializar la API de LEAN BOT
@@ -347,6 +437,14 @@ Funciones disponibles:
 - leanBotAPI.getChatHistory()
 - leanBotAPI.testGeminiConnection()
 - leanBotAPI.getChatStats()
+
+Configuración de IA:
+- leanBotAPI.setAIProvider(provider, apiKey) // 'gemini' o 'mistral'
+- leanBotAPI.getAvailableProviders()
+- leanBotAPI.testAIProvider(provider, apiKey)
+- leanBotAPI.getCurrentAIConfig()
+
+Ejemplo: leanBotAPI.setAIProvider('mistral', 'tu_api_key')
 ===============================================
     `);
 };

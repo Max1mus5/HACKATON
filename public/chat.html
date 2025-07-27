@@ -122,7 +122,16 @@
             <h3>Configuración del Chatbot</h3>
             
             <div class="form-group">
-                <label for="api-key-input">Clave API de Gemini:</label>
+                <label for="ai-provider-select">Proveedor de IA:</label>
+                <select id="ai-provider-select">
+                    <option value="gemini">Gemini (Google)</option>
+                    <option value="mistral">Mistral AI</option>
+                </select>
+                <small class="form-text">Selecciona el proveedor de inteligencia artificial.</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="api-key-input">Clave API:</label>
                 <div class="password-container">
                     <input type="password" id="api-key-input" placeholder="Ingresa tu clave API aquí...">
                     <button type="button" id="toggle-password" title="Mostrar/Ocultar clave">
@@ -132,10 +141,10 @@
                         </svg>
                     </button>
                 </div>
-                <small class="form-text">La clave API se guardará solo en este dispositivo.</small>
+                <small class="form-text" id="api-key-help">La clave API se guardará solo en este dispositivo.</small>
             </div>
             
-            <div class="form-group">
+            <div class="form-group" id="gemini-model-group">
                 <label for="gemini-model-select">Modelo de Gemini:</label>
                 <select id="gemini-model-select">
                     <option value="gemini-1.5-flash-latest">gemini-1.5-flash (rápido)</option>
@@ -157,6 +166,7 @@
     <script src="js/login.js"></script>
     <script src="js/config.js"></script>
     <script src="js/leanbot-api.js"></script>
+    <script src="js/ai-config-ui.js"></script>
     <script src="js/voiceRecognition.js"></script>
     <script src="js/chatbot.js"></script>
     

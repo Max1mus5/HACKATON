@@ -6,7 +6,7 @@ from typing import Union
 from .database import engine, Base, Session as DBSession
 from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut, MessageRequest, MessageResponse
 from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
-from .repositories.chat_repository import get_all_chats_with_score, get_chat_messages, get_chat_messages_by_user
+from .repositories.chat_repository import get_all_chats_with_score, get_chat_messages, get_chat_messages_by_user, get_ai_service
 from .utils.gemini_sentiment import analizar_sentimiento_gemini
 import os
 import json
@@ -288,3 +288,33 @@ def get_admin_stats(db: Session = Depends(get_db)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error al obtener estadísticas: {str(e)}")
+
+# ENDPOINTS PARA GESTIÓN DE PROVEEDORES DE IA
+@app.get('/ai/providers')
+def get_available_providers():
+    """
+    Obtiene la lista de proveedores de IA disponibles
+    """
+    ai_service = get_ai_service()
+    return {
+        "providers": ai_service.get_available_providers(),
+        "default": "gemini"
+    }
+
+@app.post('/ai/test')
+def test_ai_provider(request: dict):
+    """
+    Prueba la conexión con un proveedor de IA específico
+    
+    Body: {
+        "provider": "gemini" | "mistral",
+        "api_key": "optional_custom_api_key"
+    }
+    """
+    provider = request.get("provider", "gemini")
+    api_key = request.get("api_key")
+    
+    ai_service = get_ai_service()
+    result = ai_service.test_provider(provider, api_key)
+    
+    return result

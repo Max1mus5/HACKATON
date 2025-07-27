@@ -26,12 +26,15 @@ class ChatOut(ChatBase):
 class MessageRequest(BaseModel):
     message: str
     doc_id: Optional[Union[int, str]] = None
+    ai_provider: Optional[str] = "gemini"  # "gemini" o "mistral"
+    api_key: Optional[str] = None  # API key personalizada
 
 class MessageResponse(BaseModel):
     message: str
+    response: str  # Respuesta del bot
     score: Optional[float]
+    ai_provider: Optional[str] = "gemini"  # Proveedor usado para generar la respuesta
     timestamp: str
-    response: str
 
 class UsuarioBase(BaseModel):
     doc_id: Union[int, str]
