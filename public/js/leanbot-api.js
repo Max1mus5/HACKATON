@@ -17,12 +17,31 @@ class LeanBotAPI {
         return baseURL;
     }
 
-    // Generar o recuperar ID de usuario único
+    // Obtener ID de usuario desde la sesión de login o generar uno temporal
     getUserId() {
+        // Primero intentar obtener el doc_id de la sesión de login
+        const session = localStorage.getItem('lean_session');
+        if (session) {
+            try {
+                const sessionData = JSON.parse(session);
+                if (sessionData.doc_id) {
+                    // Usar el documento del usuario logueado (mantener como string para consistencia)
+                    const docId = String(sessionData.doc_id);
+                    console.log(`👤 Usando documento de usuario logueado: ${docId}`);
+                    return docId;
+                }
+            } catch (error) {
+                console.warn('Error al parsear sesión:', error);
+            }
+        }
+        
+        // Fallback: usar lean_bot_user_id si existe (para compatibilidad)
         let userId = localStorage.getItem('lean_bot_user_id');
         if (!userId) {
-            userId = Date.now(); // Usar timestamp como ID único simple
+            // Solo generar timestamp si no hay sesión de login
+            userId = Date.now();
             localStorage.setItem('lean_bot_user_id', userId);
+            console.log(`🔄 Generando ID temporal: ${userId}`);
         }
         return parseInt(userId);
     }
@@ -131,9 +150,11 @@ class LeanBotAPI {
         }
     }
 
-    // Inicializar usuario en el backend
+    // Inicializar usuario en el backend (obtiene existente o crea nuevo)
     async initializeUser() {
         try {
+            console.log(`🔄 Inicializando usuario con doc_id: ${this.currentUserId}`);
+            
             const response = await fetch(`${this.baseURL}/usuarios/`, {
                 method: 'POST',
                 headers: {
@@ -147,7 +168,15 @@ class LeanBotAPI {
             if (response.ok) {
                 const userData = await response.json();
                 this.currentChatId = userData.chat.id;
-                console.log('✅ Usuario inicializado:', userData);
+                
+                // Verificar si es usuario existente o nuevo
+                const isExisting = userData.chat.mensajes && userData.chat.mensajes.length > 0;
+                console.log(`✅ Usuario ${isExisting ? 'existente recuperado' : 'nuevo creado'}:`, {
+                    doc_id: userData.doc_id,
+                    chat_id: userData.chat.id,
+                    mensajes_existentes: userData.chat.mensajes ? userData.chat.mensajes.length : 0
+                });
+                
                 return userData;
             } else {
                 throw new Error('No se pudo inicializar usuario');

@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from typing import Union
 from .database import engine, Base, Session as DBSession
 from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut, MessageRequest, MessageResponse
 from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
@@ -74,14 +75,14 @@ def get_db():
         db.close()
 
 @app.get('/usuarios/{doc_id}/chat', response_model=ChatOut)
-def obtener_chat_de_usuario(doc_id: int, db: Session = Depends(get_db)):
+def obtener_chat_de_usuario(doc_id: Union[int, str], db: Session = Depends(get_db)):
     usuario = get_usuario_y_chat(db, doc_id)
     if not usuario or not usuario.chat:
         raise HTTPException(status_code=404, detail='Chat no encontrado para este usuario')
     return usuario.chat
 
 @app.get('/usuarios/{doc_id}/messages')
-def obtener_mensajes_de_usuario(doc_id: int, db: Session = Depends(get_db)):
+def obtener_mensajes_de_usuario(doc_id: Union[int, str], db: Session = Depends(get_db)):
     """
     Obtiene solo los mensajes del chat de un usuario específico
     """
@@ -124,7 +125,7 @@ def enviar_mensaje_al_chat(chat_id: str, message_request: MessageRequest, db: Se
 
 # ENDPOINT ALTERNATIVO: Enviar mensaje con doc_id en lugar de chat_id
 @app.post('/usuarios/{doc_id}/message', response_model=MessageResponse)
-def enviar_mensaje_por_usuario(doc_id: int, message_request: MessageRequest, db: Session = Depends(get_db)):
+def enviar_mensaje_por_usuario(doc_id: Union[int, str], message_request: MessageRequest, db: Session = Depends(get_db)):
     """
     Endpoint alternativo para enviar mensajes usando doc_id del usuario.
     """
@@ -141,7 +142,7 @@ def enviar_mensaje_por_usuario(doc_id: int, message_request: MessageRequest, db:
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")
 
 @app.get('/usuarios/{doc_id}', response_model=UsuarioOut)
-def obtener_usuario_y_chat_endpoint(doc_id: int, db: Session = Depends(get_db)):
+def obtener_usuario_y_chat_endpoint(doc_id: Union[int, str], db: Session = Depends(get_db)):
     usuario = get_usuario_y_chat(db, doc_id)
     if not usuario:
         raise HTTPException(status_code=404, detail='Usuario no encontrado')

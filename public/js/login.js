@@ -75,14 +75,14 @@ class LoginManager {
         if (trimmed.length === 0) {
             return {
                 valid: false,
-                message: 'El documento de identidad es requerido'
+                message: 'El documento de identidad o nombre es requerido'
             };
         }
         
         if (trimmed.length < 3) {
             return {
                 valid: false,
-                message: 'El documento debe tener al menos 3 caracteres'
+                message: 'El documento o nombre debe tener al menos 3 caracteres'
             };
         }
         
@@ -91,7 +91,7 @@ class LoginManager {
         if (!validPattern.test(trimmed)) {
             return {
                 valid: false,
-                message: 'El documento solo puede contener letras, números, espacios y guiones'
+                message: 'El documento o nombre solo puede contener letras, números, espacios y guiones'
             };
         }
         
@@ -217,7 +217,7 @@ handleLogin() {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ doc_id: parseInt(this.documento) || this.documento })
+        body: JSON.stringify({ doc_id: this.documento.trim() })
     })
     .then((res) => {
         if (!res.ok) {

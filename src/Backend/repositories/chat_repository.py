@@ -14,19 +14,24 @@ def get_gemini_service():
     """Obtiene una instancia actualizada del servicio de Gemini con la API key más reciente"""
     return GeminiChatService()
 
-def create_usuario_y_chat(db: Session, doc_id: int):
+def create_usuario_y_chat(db: Session, doc_id):
+    # Convertir doc_id a string para consistencia
+    doc_id_str = str(doc_id)
+    
     chat = Chat()
     db.add(chat)
     db.flush()
-    usuario = Usuario(doc_id=doc_id, chat_id=chat.id)
+    usuario = Usuario(doc_id=doc_id_str, chat_id=chat.id)
     db.add(usuario)
     db.commit()
     db.refresh(usuario)
     db.refresh(chat)
     return usuario
 
-def get_usuario_y_chat(db: Session, doc_id: int):
-    return db.query(Usuario).filter(Usuario.doc_id == doc_id).first()
+def get_usuario_y_chat(db: Session, doc_id):
+    # Convertir doc_id a string para consistencia
+    doc_id_str = str(doc_id)
+    return db.query(Usuario).filter(Usuario.doc_id == doc_id_str).first()
 
 def process_message(db: Session, chat_id: str, message_request: MessageRequest) -> MessageResponse:
     """
@@ -183,7 +188,7 @@ def get_chat_messages(db: Session, chat_id: str):
         return chat.mensajes if chat.mensajes else []
     return []
 
-def get_chat_messages_by_user(db: Session, doc_id: int):
+def get_chat_messages_by_user(db: Session, doc_id):
     """
     Obtiene los mensajes del chat de un usuario específico
     """

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, Any, List
+from typing import Optional, Any, List, Union
 from datetime import datetime
 
 class MessageSchema(BaseModel):
@@ -25,7 +25,7 @@ class ChatOut(ChatBase):
 
 class MessageRequest(BaseModel):
     message: str
-    doc_id: Optional[int] = None
+    doc_id: Optional[Union[int, str]] = None
 
 class MessageResponse(BaseModel):
     message: str
@@ -34,7 +34,7 @@ class MessageResponse(BaseModel):
     response: str
 
 class UsuarioBase(BaseModel):
-    doc_id: int
+    doc_id: Union[int, str]
 
 class UsuarioCreate(UsuarioBase):
     pass
