@@ -2,11 +2,11 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from .database import engine, Base, Session as DBSession
-from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut, MessageRequest, MessageResponse
-from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
-from .repositories.chat_repository import get_all_chats_with_score, get_chat_messages, get_chat_messages_by_user
-from .utils.gemini_sentiment import analizar_sentimiento_gemini
+from database import engine, Base, Session as DBSession
+from schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut, MessageRequest, MessageResponse
+from repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
+from repositories.chat_repository import get_all_chats_with_score, get_chat_messages, get_chat_messages_by_user
+from utils.gemini_sentiment import analizar_sentimiento_gemini
 import os
 import json
 import random
