@@ -5,7 +5,7 @@ Módulo para cálculo de scores de mensajes usando Gemini AI
 import os
 import requests
 import json
-from utils.gemini_sentiment import analizar_sentimiento_gemini
+from src.Backend.utils.gemini_sentiment import analizar_sentimiento_gemini
 
 def calculate_message_score(mensaje_usuario, respuesta_bot):
     """

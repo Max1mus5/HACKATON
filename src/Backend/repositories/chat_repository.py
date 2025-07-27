@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
-from models.chat import Usuario, Chat
-from schemas.chat_schemas import UsuarioCreate, ChatCreate, ChatUpdate, MessageRequest, MessageResponse
-from utils.gemini_sentiment import analizar_sentimiento_gemini
-from utils.gemini_chat import GeminiChatService
-from utils.scoring import calculate_message_score
+from ..models.chat import Usuario, Chat
+from ..schemas.chat_schemas import UsuarioCreate, ChatCreate, ChatUpdate, MessageRequest, MessageResponse
+from ..utils.gemini_sentiment import analizar_sentimiento_gemini
+from ..utils.gemini_chat import GeminiChatService
+from ..utils.scoring import calculate_message_score
 from datetime import datetime
 import json
 import os
