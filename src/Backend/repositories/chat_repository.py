@@ -1,8 +1,9 @@
 from sqlalchemy.orm import Session
-from ..models.chat import Usuario, Chat
-from ..schemas.chat_schemas import UsuarioCreate, ChatCreate, ChatUpdate, MessageRequest, MessageResponse
-from ..utils.gemini_sentiment import analizar_sentimiento_gemini
-from ..utils.gemini_chat import GeminiChatService
+from sqlalchemy.orm.attributes import flag_modified
+from models.chat import Usuario, Chat
+from schemas.chat_schemas import UsuarioCreate, ChatCreate, ChatUpdate, MessageRequest, MessageResponse
+from utils.gemini_sentiment import analizar_sentimiento_gemini
+from utils.gemini_chat import GeminiChatService
 from datetime import datetime
 import json
 import os
@@ -47,7 +48,7 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     # Analizar sentimiento y calcular score usando Gemini con contexto completo
     try:
         # Importar la función de scoring mejorada
-        from ..api import calculate_message_score
+        from api import calculate_message_score
         sentiment_score = calculate_message_score(message_request.message, bot_response)
     except Exception as e:
         print(f"Error en análisis de sentimiento: {e}")
@@ -70,24 +71,48 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     }
     
     # APPEND: Agregar el nuevo mensaje al historial
+    print(f"🔍 Estado antes del append:")
+    print(f"   - conversation_history: {conversation_history}")
+    print(f"   - chat.mensajes actual: {chat.mensajes}")
+    
     if conversation_history is None or not isinstance(conversation_history, list):
         # Si no hay historial o no es una lista, crear nueva lista
+        print("📝 Creando nuevo historial")
         chat.mensajes = [new_message]
     else:
         # Hacer append del nuevo mensaje al historial existente
+        print(f"📝 Agregando mensaje al historial existente ({len(conversation_history)} mensajes)")
         updated_messages = conversation_history.copy()
         updated_messages.append(new_message)
         chat.mensajes = updated_messages
     
+    print(f"✅ Mensajes después del append: {len(chat.mensajes) if chat.mensajes else 0}")
+    
     # Actualizar el score general del chat con el último sentimiento
     chat.score = sentiment_score
     
-    # Forzar actualización en SQLAlchemy para campos JSON
-    # Marcar explícitamente que el campo mensajes ha sido modificado
-    chat.mensajes = list(chat.mensajes) if chat.mensajes else []
+    # CRÍTICO: Marcar explícitamente que los campos JSON han sido modificados
+    # Esto es necesario para que SQLAlchemy detecte cambios en campos JSON
+    flag_modified(chat, 'mensajes')
+    flag_modified(chat, 'score')
     
-    db.commit()
-    db.refresh(chat)
+    print(f"🔄 Guardando en base de datos...")
+    
+    try:
+        db.commit()
+        db.refresh(chat)
+        print(f"✅ Guardado exitoso. Total mensajes en BD: {len(chat.mensajes) if chat.mensajes else 0}")
+        
+        # Verificación adicional
+        if chat.mensajes:
+            print(f"📊 Último mensaje guardado: {chat.mensajes[-1].get('message', 'N/A')[:50]}...")
+        else:
+            print("⚠️ WARNING: No hay mensajes después del commit!")
+            
+    except Exception as e:
+        print(f"❌ Error al guardar en BD: {e}")
+        db.rollback()
+        raise
     
     return MessageResponse(
         message=message_request.message,
