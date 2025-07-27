@@ -48,7 +48,7 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
     # Analizar sentimiento y calcular score usando Gemini con contexto completo
     try:
         # Importar la función de scoring mejorada
-        from ..api import calculate_message_score
+        from ..utils.scoring import calculate_message_score
         sentiment_score = calculate_message_score(message_request.message, bot_response)
     except Exception as e:
         print(f"Error en análisis de sentimiento: {e}")
