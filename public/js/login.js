@@ -302,6 +302,10 @@ handleLogin() {
         localStorage.removeItem('analyticsCache');
         localStorage.removeItem('userStats');
         
+        // Limpiar configuración de API keys
+        localStorage.removeItem('gemini_api_key');
+        localStorage.removeItem('api_config');
+        
         // Limpiar cualquier dato relacionado con prefijos conocidos
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -315,7 +319,9 @@ handleLogin() {
                 key.startsWith('dashboard_') ||
                 key.startsWith('admin_') ||
                 key.startsWith('analytics_') ||
-                key.startsWith('sentiment_')
+                key.startsWith('sentiment_') ||
+                key.startsWith('gemini_') ||
+                key.startsWith('api_')
             )) {
                 keysToRemove.push(key);
             }
