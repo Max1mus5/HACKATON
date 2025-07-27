@@ -197,6 +197,9 @@ class LoginManager {
 handleLogin() {
     this.hideError();
 
+    // Preparar localStorage para nueva sesión
+    LoginManager.prepareForNewSession();
+
     // Validar entrada del usuario
     const validation = this.validateDocumento(this.documento);
     if (!validation.valid) {
@@ -278,30 +281,106 @@ handleLogin() {
         }
     }
     
-    // Logout function
+    // Logout function - Limpia completamente localStorage para nueva sesión
     static logout() {
-        // Limpiar todos los datos de sesión
+        console.log('Iniciando cierre de sesión...');
+        
+        // Limpiar todos los datos de sesión principal
         localStorage.removeItem('lean_session');
         localStorage.removeItem('lean_session_expiry');
         
-        // Limpiar datos del leanBotAPI
+        // Limpiar datos del leanBotAPI y chat
         localStorage.removeItem('lean_bot_user_id');
+        localStorage.removeItem('currentChatId');
+        localStorage.removeItem('chatHistory');
+        localStorage.removeItem('userMessages');
+        localStorage.removeItem('botResponses');
         
-        // Limpiar cualquier otro dato relacionado con el chat
+        // Limpiar datos de dashboard y analytics
+        localStorage.removeItem('dashboardData');
+        localStorage.removeItem('sentimentData');
+        localStorage.removeItem('analyticsCache');
+        localStorage.removeItem('userStats');
+        
+        // Limpiar cualquier dato relacionado con prefijos conocidos
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && (key.startsWith('lean_') || key.startsWith('chat_') || key.startsWith('bot_'))) {
+            if (key && (
+                key.startsWith('lean_') || 
+                key.startsWith('chat_') || 
+                key.startsWith('bot_') ||
+                key.startsWith('user_') ||
+                key.startsWith('session_') ||
+                key.startsWith('dashboard_') ||
+                key.startsWith('admin_') ||
+                key.startsWith('analytics_') ||
+                key.startsWith('sentiment_')
+            )) {
                 keysToRemove.push(key);
             }
         }
         
-        keysToRemove.forEach(key => localStorage.removeItem(key));
+        // Remover todas las claves identificadas
+        keysToRemove.forEach(key => {
+            localStorage.removeItem(key);
+            console.log(`Removido: ${key}`);
+        });
         
-        console.log('🚪 Sesión cerrada y datos limpiados');
+        // Limpiar sessionStorage también por seguridad
+        sessionStorage.clear();
+        
+        // Limpiar cookies relacionadas si existen
+        document.cookie.split(";").forEach(function(c) { 
+            document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+        });
+        
+        console.log('Sesión cerrada completamente. localStorage y sessionStorage limpiados.');
+        console.log('Preparado para nueva sesión.');
+        
+        // Redirigir al login
         window.location.href = './login';
     }
     
+    // Preparar localStorage para nueva sesión
+    static prepareForNewSession() {
+        console.log('Preparando localStorage para nueva sesión...');
+        
+        // Verificar que no queden datos residuales
+        const remainingKeys = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (
+                key.startsWith('lean_') || 
+                key.startsWith('chat_') || 
+                key.startsWith('bot_') ||
+                key.startsWith('user_') ||
+                key.startsWith('session_') ||
+                key.startsWith('dashboard_') ||
+                key.startsWith('admin_') ||
+                key.startsWith('analytics_') ||
+                key.startsWith('sentiment_')
+            )) {
+                remainingKeys.push(key);
+            }
+        }
+        
+        // Limpiar cualquier dato residual
+        if (remainingKeys.length > 0) {
+            console.log('Limpiando datos residuales:', remainingKeys);
+            remainingKeys.forEach(key => localStorage.removeItem(key));
+        }
+        
+        // Inicializar estructura básica para nueva sesión
+        const initialData = {
+            sessionPrepared: true,
+            preparedAt: new Date().toISOString()
+        };
+        
+        localStorage.setItem('lean_session_prepared', JSON.stringify(initialData));
+        console.log('localStorage preparado para nueva sesión');
+    }
+
     // Get specific session data
     static getSessionData() {
         const session = LoginManager.checkSession();

@@ -27,6 +27,31 @@ class LeanBotAPI {
         return parseInt(userId);
     }
 
+    // Limpiar datos específicos del chat para nueva sesión
+    clearChatData() {
+        console.log('Limpiando datos específicos del chat...');
+        
+        // Resetear variables de instancia
+        this.currentChatId = null;
+        
+        // Limpiar datos específicos del chat en localStorage
+        const chatKeys = [
+            'currentChatId',
+            'chatHistory',
+            'userMessages',
+            'botResponses',
+            'lastMessageId',
+            'conversationState'
+        ];
+        
+        chatKeys.forEach(key => {
+            localStorage.removeItem(key);
+            console.log(`Chat data cleared: ${key}`);
+        });
+        
+        console.log('Datos del chat limpiados para nueva sesión');
+    }
+
     // Verificar si el backend está disponible
     async checkBackendAvailability() {
         try {
