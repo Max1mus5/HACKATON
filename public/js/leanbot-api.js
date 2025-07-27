@@ -96,13 +96,18 @@ class LeanBotAPI {
                 apiKey = localStorage.getItem('gemini_api_key');
             }
             
-            // 3. API key hardcodeada para testing (temporal)
+            // 3. Variable de entorno o API key por defecto
             if (!apiKey) {
-                // Usar una API key de prueba si está disponible
-                apiKey = "AIzaSyBqJzQvGvn8wGqGvGvGvGvGvGvGvGvGvGv"; // Placeholder
+                // Intentar obtener de variable de entorno
+                if (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) {
+                    apiKey = process.env.GEMINI_API_KEY;
+                } else {
+                    // API key por defecto
+                    apiKey = "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0";
+                }
             }
             
-            if (apiKey && apiKey.trim() !== '' && apiKey !== "AIzaSyBqJzQvGvn8wGqGvGvGvGvGvGvGvGvGvGv") {
+            if (apiKey && apiKey.trim() !== '') {
                 const response = await fetch(`${this.baseURL}/config/gemini_api_key`, {
                     method: 'POST',
                     headers: {

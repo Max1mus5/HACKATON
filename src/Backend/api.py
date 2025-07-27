@@ -11,6 +11,11 @@ import os
 import json
 import random
 from datetime import datetime
+import os
+
+# Configurar API key por defecto si no existe
+if not os.getenv("GEMINI_API_KEY"):
+    os.environ["GEMINI_API_KEY"] = "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0"
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
 
@@ -21,6 +26,25 @@ def health_check():
 
 # Variable global temporal para almacenar la API key recibida
 GEMINI_API_KEY_RUNTIME = None
+
+# Endpoint para configurar API key de Gemini
+@app.post('/config/gemini_api_key')
+def configure_gemini_api_key(request: dict):
+    global GEMINI_API_KEY_RUNTIME
+    try:
+        api_key = request.get('api_key')
+        if api_key and api_key.strip():
+            GEMINI_API_KEY_RUNTIME = api_key.strip()
+            # También configurar en el entorno para que lo use gemini_chat.py
+            import os
+            os.environ["GEMINI_API_KEY"] = api_key.strip()
+            print(f"✅ API key de Gemini configurada: {api_key[:10]}...")
+            return {"status": "success", "message": "API key configurada correctamente"}
+        else:
+            return {"status": "error", "message": "API key vacía"}
+    except Exception as e:
+        print(f"❌ Error configurando API key: {e}")
+        return {"status": "error", "message": str(e)}
 
 def calculate_message_score(mensaje_usuario, respuesta_bot=None):
     """
@@ -34,10 +58,14 @@ def calculate_message_score(mensaje_usuario, respuesta_bot=None):
             contexto_completo += f"\nRespuesta del bot: {respuesta_bot}"
         
         # Usar Gemini para evaluar el score directamente
-        api_key = os.environ.get("GEMINI_API_KEY")
-        if not api_key:
-            print("Warning: API key de Gemini no configurada, usando score neutral")
+        # Usar API key configurada globalmente o por defecto
+        api_key = GEMINI_API_KEY_RUNTIME or os.getenv("GEMINI_API_KEY", "AIzaSyCzaQACaf-vJZPF1JFXPt6VSfGyfM1ZbZ0")
+        
+        if not api_key or api_key.strip() == "":
+            print("⚠️ Warning: API key de Gemini no configurada, usando score neutral")
             return 5.0
+        
+        print(f"✅ Usando API key de Gemini: {api_key[:10]}...")
         
         url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
         
@@ -78,17 +106,23 @@ def calculate_message_score(mensaje_usuario, respuesta_bot=None):
                 score_match = re.search(r'\b([1-9]|10)\b', score_text)
                 if score_match:
                     score = float(score_match.group(1))
-                    print(f"Score calculado por Gemini: {score} para mensaje: {mensaje_usuario[:50]}...")
+                    print(f"✅ Score calculado por Gemini: {score} para mensaje: '{mensaje_usuario[:50]}...'")
                     return score
+                else:
+                    print(f"⚠️ No se pudo extraer score de respuesta Gemini: {score_text}")
         
         # Fallback: usar análisis de sentimiento básico
+        print("⚠️ Usando fallback de análisis de sentimiento")
         sentimiento = analizar_sentimiento_gemini(mensaje_usuario)
         if sentimiento == "positivo":
-            return 7.0
+            score = 7.0
         elif sentimiento == "negativo":
-            return 3.0
+            score = 3.0
         else:  # neutro
-            return 5.0
+            score = 5.0
+        
+        print(f"⚠️ Score calculado con fallback: {score}")
+        return score
             
     except Exception as e:
         print(f"Error calculando score con Gemini: {e}")
