@@ -2,5 +2,5 @@
 // IMPORTANTE: Este archivo no debe incluirse en el control de versiones (añádelo a .gitignore)
 
 const API_CONFIG = {
-    geminiApiKey: "" // Reemplaza esto con tu clave API real
+    geminiApiKey: "AIzaSyBqJzQvGvn8wGqGvGvGvGvGvGvGvGvGvGv" // API key temporal para testing
 };

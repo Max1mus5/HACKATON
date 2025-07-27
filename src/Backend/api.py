@@ -14,6 +14,11 @@ from datetime import datetime
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
 
+# Health check endpoint
+@app.get('/')
+def health_check():
+    return {"message": "LEAN BOT API funcionando correctamente", "status": "healthy"}
+
 # Variable global temporal para almacenar la API key recibida
 GEMINI_API_KEY_RUNTIME = None
 
@@ -23,16 +28,81 @@ def calculate_message_score(mensaje_usuario, respuesta_bot=None):
     Retorna un score numérico entre 1-10
     """
     try:
+        # Crear el contexto completo para Gemini
+        contexto_completo = f"Mensaje del usuario: {mensaje_usuario}"
+        if respuesta_bot:
+            contexto_completo += f"\nRespuesta del bot: {respuesta_bot}"
+        
+        # Usar Gemini para evaluar el score directamente
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            print("Warning: API key de Gemini no configurada, usando score neutral")
+            return 5.0
+        
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={api_key}"
+        
+        prompt = (
+            "Eres un evaluador de conversaciones para LEAN BOT de INGE LEAN. "
+            "Evalúa la siguiente conversación y asígnale un score entre 1-10 donde:\n"
+            "1-3: Muy negativo (frustración, enojo, problemas graves)\n"
+            "4-5: Negativo/Neutro (neutral, indiferente)\n"
+            "6-7: Positivo (satisfecho, contento)\n"
+            "8-10: Muy positivo (muy satisfecho, entusiasta)\n\n"
+            "Responde únicamente con el número del score (ejemplo: 7).\n\n"
+            f"Conversación:\n{contexto_completo}"
+        )
+        
+        data = {
+            "contents": [
+                {"parts": [{"text": prompt}]}
+            ],
+            "generationConfig": {
+                "temperature": 0.1,
+                "maxOutputTokens": 5,
+                "topP": 0.95
+            }
+        }
+        
+        import requests
+        response = requests.post(url, json=data, timeout=30)
+        response.raise_for_status()
+        result = response.json()
+        
+        # Extraer el score del resultado
+        if "candidates" in result and len(result["candidates"]) > 0:
+            candidate = result["candidates"][0]
+            if "content" in candidate and "parts" in candidate["content"]:
+                score_text = candidate["content"]["parts"][0]["text"].strip()
+                # Extraer solo el número
+                import re
+                score_match = re.search(r'\b([1-9]|10)\b', score_text)
+                if score_match:
+                    score = float(score_match.group(1))
+                    print(f"Score calculado por Gemini: {score} para mensaje: {mensaje_usuario[:50]}...")
+                    return score
+        
+        # Fallback: usar análisis de sentimiento básico
         sentimiento = analizar_sentimiento_gemini(mensaje_usuario)
         if sentimiento == "positivo":
-            return random.randint(6, 10)
+            return 7.0
         elif sentimiento == "negativo":
-            return random.randint(1, 4)
+            return 3.0
         else:  # neutro
-            return 5
+            return 5.0
+            
     except Exception as e:
-        print(f"Error calculando score: {e}")
-        return 5  # Score neutral por defecto
+        print(f"Error calculando score con Gemini: {e}")
+        # Fallback: usar análisis de sentimiento básico
+        try:
+            sentimiento = analizar_sentimiento_gemini(mensaje_usuario)
+            if sentimiento == "positivo":
+                return 7.0
+            elif sentimiento == "negativo":
+                return 3.0
+            else:
+                return 5.0
+        except:
+            return 5.0  # Score neutral por defecto
 # Endpoint para recibir y almacenar la API key de Gemini
 @app.post('/config/gemini_api_key')
 def set_gemini_api_key(payload: dict):
@@ -216,7 +286,10 @@ def obtener_todos_los_chats_admin(db: Session = Depends(get_db)):
                 for message in chat['mensajes']:
                     # Si el mensaje no tiene score, calcularlo automáticamente
                     if not message.get('score') and message.get('message'):
-                        message['score'] = calculate_message_score(message['message'])
+                        # Usar contexto completo (mensaje + respuesta) para mejor scoring
+                        respuesta_bot = message.get('response', '')
+                        message['score'] = calculate_message_score(message['message'], respuesta_bot)
+                        print(f"Score calculado para mensaje admin: {message['score']}")
                     
                     # Asegurar que tenga timestamp
                     if not message.get('timestamp'):

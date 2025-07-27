@@ -44,14 +44,19 @@ def process_message(db: Session, chat_id: str, message_request: MessageRequest) 
         conversation_history
     )
     
-    # Analizar sentimiento del mensaje del usuario
+    # Analizar sentimiento y calcular score usando Gemini con contexto completo
     try:
-        sentiment_result = analizar_sentimiento_gemini(message_request.message)
-        # Convertir sentimiento a score numérico
-        sentiment_score = convert_sentiment_to_score(sentiment_result)
+        # Importar la función de scoring mejorada
+        from ..api import calculate_message_score
+        sentiment_score = calculate_message_score(message_request.message, bot_response)
     except Exception as e:
         print(f"Error en análisis de sentimiento: {e}")
-        sentiment_score = 5.0  # Neutral por defecto
+        # Fallback: usar análisis básico
+        try:
+            sentiment_result = analizar_sentimiento_gemini(message_request.message)
+            sentiment_score = convert_sentiment_to_score(sentiment_result)
+        except:
+            sentiment_score = 5.0  # Neutral por defecto
     
     # Crear timestamp
     timestamp = datetime.now().isoformat()

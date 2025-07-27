@@ -66,6 +66,10 @@ class LeanBotAPI {
                 const data = await response.json();
                 this.isBackendAvailable = true;
                 console.log('✅ Backend LEAN BOT disponible:', data.message);
+                
+                // Configurar API key de Gemini
+                await this.configureGeminiAPI();
+                
                 await this.initializeUser();
             } else {
                 throw new Error('Backend no responde correctamente');
@@ -73,6 +77,52 @@ class LeanBotAPI {
         } catch (error) {
             console.warn('⚠️ Backend LEAN BOT no disponible:', error.message);
             this.isBackendAvailable = false;
+        }
+    }
+
+    // Configurar API key de Gemini en el backend
+    async configureGeminiAPI() {
+        try {
+            // Intentar obtener la API key desde diferentes fuentes
+            let apiKey = null;
+            
+            // 1. Desde config.js
+            if (typeof API_CONFIG !== 'undefined' && API_CONFIG.geminiApiKey) {
+                apiKey = API_CONFIG.geminiApiKey;
+            }
+            
+            // 2. Desde localStorage (configuración previa)
+            if (!apiKey) {
+                apiKey = localStorage.getItem('gemini_api_key');
+            }
+            
+            // 3. API key hardcodeada para testing (temporal)
+            if (!apiKey) {
+                // Usar una API key de prueba si está disponible
+                apiKey = "AIzaSyBqJzQvGvn8wGqGvGvGvGvGvGvGvGvGvGv"; // Placeholder
+            }
+            
+            if (apiKey && apiKey.trim() !== '' && apiKey !== "AIzaSyBqJzQvGvn8wGqGvGvGvGvGvGvGvGvGvGv") {
+                const response = await fetch(`${this.baseURL}/config/gemini_api_key`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('✅ API key de Gemini configurada en el backend');
+                } else {
+                    console.warn('⚠️ Error configurando API key de Gemini');
+                }
+            } else {
+                console.warn('⚠️ API key de Gemini no encontrada. El scoring automático usará valores por defecto.');
+            }
+        } catch (error) {
+            console.warn('⚠️ Error configurando API key de Gemini:', error);
         }
     }
 
