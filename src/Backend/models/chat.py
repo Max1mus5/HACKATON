@@ -1,7 +1,8 @@
-from sqlalchemy import Column, String, Integer, ForeignKey
+from sqlalchemy import Column, String, Integer, ForeignKey, DateTime
 from sqlalchemy.dialects.sqlite import JSON as SQLiteJSON
 from sqlalchemy.orm import relationship
 from ..database import Base
+from datetime import datetime
 import uuid
 
 class Chat(Base):
@@ -9,6 +10,8 @@ class Chat(Base):
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     mensajes = Column(SQLiteJSON, nullable=True)
     score = Column(SQLiteJSON, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     usuario = relationship('Usuario', back_populates='chat', uselist=False)
 
 class Usuario(Base):

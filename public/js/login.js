@@ -280,8 +280,25 @@ handleLogin() {
     
     // Logout function
     static logout() {
+        // Limpiar todos los datos de sesión
         localStorage.removeItem('lean_session');
         localStorage.removeItem('lean_session_expiry');
+        
+        // Limpiar datos del leanBotAPI
+        localStorage.removeItem('lean_bot_user_id');
+        
+        // Limpiar cualquier otro dato relacionado con el chat
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.startsWith('lean_') || key.startsWith('chat_') || key.startsWith('bot_'))) {
+                keysToRemove.push(key);
+            }
+        }
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        console.log('🚪 Sesión cerrada y datos limpiados');
         window.location.href = './login';
     }
     

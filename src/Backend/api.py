@@ -6,13 +6,33 @@ from .database import engine, Base, Session as DBSession
 from .schemas.chat_schemas import UsuarioCreate, UsuarioOut, ChatUpdate, ChatOut, MessageRequest, MessageResponse
 from .repositories.chat_repository import create_usuario_y_chat, get_usuario_y_chat, update_chat, get_score, process_message
 from .repositories.chat_repository import get_all_chats_with_score, get_chat_messages, get_chat_messages_by_user
+from .utils.gemini_sentiment import analizar_sentimiento_gemini
 import os
 import json
+import random
+from datetime import datetime
 
 app = FastAPI(title="LEAN BOT API", description="API para el chatbot LEAN de INGE LEAN")
 
 # Variable global temporal para almacenar la API key recibida
 GEMINI_API_KEY_RUNTIME = None
+
+def calculate_message_score(mensaje_usuario, respuesta_bot=None):
+    """
+    Calcula el score automático de un mensaje usando Gemini sentiment analysis
+    Retorna un score numérico entre 1-10
+    """
+    try:
+        sentimiento = analizar_sentimiento_gemini(mensaje_usuario)
+        if sentimiento == "positivo":
+            return random.randint(6, 10)
+        elif sentimiento == "negativo":
+            return random.randint(1, 4)
+        else:  # neutro
+            return 5
+    except Exception as e:
+        print(f"Error calculando score: {e}")
+        return 5  # Score neutral por defecto
 # Endpoint para recibir y almacenar la API key de Gemini
 @app.post('/config/gemini_api_key')
 def set_gemini_api_key(payload: dict):
@@ -184,9 +204,28 @@ def test_gemini_integration():
 def obtener_todos_los_chats_admin(db: Session = Depends(get_db)):
     """
     Endpoint para el panel de administración que obtiene todos los chats con información de usuarios
+    Calcula scores automáticamente para mensajes que no los tienen
     """
     try:
         chats_data = get_all_chats_with_score(db)
+        
+        # Procesar cada chat para asegurar que los mensajes tengan scores
+        for chat in chats_data:
+            if chat.get('mensajes') and isinstance(chat['mensajes'], list):
+                updated_messages = []
+                for message in chat['mensajes']:
+                    # Si el mensaje no tiene score, calcularlo automáticamente
+                    if not message.get('score') and message.get('message'):
+                        message['score'] = calculate_message_score(message['message'])
+                    
+                    # Asegurar que tenga timestamp
+                    if not message.get('timestamp'):
+                        message['timestamp'] = datetime.now().isoformat()
+                    
+                    updated_messages.append(message)
+                
+                chat['mensajes'] = updated_messages
+        
         return {"chats": chats_data}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error interno del servidor: {str(e)}")

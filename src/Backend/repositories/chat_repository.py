@@ -170,8 +170,10 @@ def get_all_chats_with_score(db: Session):
         usuario = db.query(Usuario).filter(Usuario.chat_id == chat.id).first()
         doc_id = usuario.doc_id if usuario else None
         resultado.append({
-            "doc_id": doc_id,
+            "id": chat.id,
+            "usuario_doc_id": doc_id,
             "mensajes": chat.mensajes,
-            "score": chat.score
+            "score": chat.score,
+            "created_at": chat.created_at.isoformat() if chat.created_at else datetime.now().isoformat()
         })
     return resultado
