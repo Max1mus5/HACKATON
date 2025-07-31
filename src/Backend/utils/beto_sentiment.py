@@ -12,9 +12,12 @@ try:
     from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
     import torch
     TRANSFORMERS_AVAILABLE = True
+    TORCH_AVAILABLE = True
 except ImportError as e:
     print(f"⚠️ Warning: transformers no disponible: {e}")
     TRANSFORMERS_AVAILABLE = False
+    TORCH_AVAILABLE = False
+    torch = None  # Definir torch como None para evitar errores
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -30,9 +33,9 @@ class BetoSentimentAnalyzer:
         self.analyzer = None
         self.available = TRANSFORMERS_AVAILABLE
         
-        if TRANSFORMERS_AVAILABLE:
+        if TRANSFORMERS_AVAILABLE and TORCH_AVAILABLE:
             try:
-                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+                self.device = "cuda" if torch and torch.cuda.is_available() else "cpu"
             except:
                 self.device = "cpu"
             self._initialize_model()
@@ -216,11 +219,20 @@ class BetoSentimentAnalyzer:
         """
         Obtiene información sobre el modelo cargado
         """
+        cuda_available = False
+        if TORCH_AVAILABLE and torch:
+            try:
+                cuda_available = torch.cuda.is_available()
+            except:
+                cuda_available = False
+        
         return {
             "model_name": self.model_name,
             "device": self.device,
             "available": self.analyzer is not None,
-            "cuda_available": torch.cuda.is_available()
+            "cuda_available": cuda_available,
+            "transformers_available": TRANSFORMERS_AVAILABLE,
+            "torch_available": TORCH_AVAILABLE
         }
 
 # Instancia global del analizador
