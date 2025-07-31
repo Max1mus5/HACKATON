@@ -48,26 +48,6 @@
     {
       "source": "/data/:path*",
       "destination": "/public/data/:path*"
-    },
-    {
-      "source": "/api/:path*",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/sentiment/:path*",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/analytics/:path*",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/usuarios/:path*",
-      "destination": "/api/index"
-    },
-    {
-      "source": "/config/:path*",
-      "destination": "/api/index"
     }
   ],
   "redirects": [
@@ -107,17 +87,6 @@
       "permanent": true
     }
   ],
-  "functions": {
-    "api/index.py": {
-      "runtime": "python3.9",
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "env": {
-    "GEMINI_API_KEY": "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0",
-    "TRANSFORMERS_CACHE": "/tmp/transformers_cache"
-  },
   "cleanUrls": true,
   "trailingSlash": false
 }

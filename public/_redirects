@@ -1,9 +1,0 @@
-# Redirects para Netlify/Vercel
-/api/* /api/index 200
-/sentiment/* /api/index 200
-/analytics/* /api/index 200
-/usuarios/* /api/index 200
-/config/* /api/index 200
-
-# SPA fallback
-/* /index.html 200
