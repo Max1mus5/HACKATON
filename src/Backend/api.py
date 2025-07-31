@@ -460,6 +460,93 @@ def get_active_conversations():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error obteniendo conversaciones activas: {str(e)}")
 
+@app.get('/analytics/chat-details/{user_id}')
+def get_chat_details(user_id: Union[int, str], db: Session = Depends(get_db)):
+    """
+    Obtiene detalles completos del chat de un usuario específico
+    """
+    try:
+        # Buscar usuario y chat
+        usuario = get_usuario_y_chat(db, user_id)
+        
+        if not usuario or not usuario.chat:
+            return {"found": False, "message": "Usuario o chat no encontrado"}
+        
+        # Obtener mensajes del chat
+        mensajes = usuario.chat.mensajes or []
+        
+        if not mensajes:
+            return {
+                "found": True,
+                "user_info": {"doc_id": usuario.doc_id},
+                "chat_stats": {"total_messages": 0, "score": usuario.chat.score},
+                "messages": [],
+                "sentiment_analysis": {
+                    "avg_confidence": 0,
+                    "dominant_sentiment": "neutral",
+                    "sentiment_counts": {"positive": 0, "negative": 0, "neutral": 0}
+                }
+            }
+        
+        # Analizar sentimientos de todos los mensajes
+        sentiment_counts = {"positive": 0, "negative": 0, "neutral": 0}
+        total_confidence = 0
+        valid_sentiments = 0
+        
+        processed_messages = []
+        
+        for msg in mensajes:
+            # Los mensajes son diccionarios, no objetos
+            if isinstance(msg, dict) and 'message' in msg:
+                sentiment_result = analyze_sentiment(msg['message'])
+                
+                # Mapear sentimientos
+                sentiment_map = {"POS": "positive", "NEG": "negative", "NEU": "neutral"}
+                sentiment = sentiment_map.get(sentiment_result.get("sentiment", "NEU"), "neutral")
+                
+                sentiment_counts[sentiment] += 1
+                
+                if sentiment_result.get("confidence"):
+                    total_confidence += sentiment_result["confidence"]
+                    valid_sentiments += 1
+                
+                processed_messages.append({
+                    "message": msg['message'],
+                    "response": msg.get('response', None),
+                    "timestamp": msg.get('timestamp', None),
+                    "sentiment": sentiment_result.get("sentiment", "NEU"),
+                    "confidence": sentiment_result.get("confidence", 0),
+                    "score": msg.get('score', None)
+                })
+        
+        # Calcular estadísticas
+        avg_confidence = total_confidence / valid_sentiments if valid_sentiments > 0 else 0
+        
+        # Determinar sentimiento dominante
+        dominant_sentiment = max(sentiment_counts, key=sentiment_counts.get)
+        
+        return {
+            "found": True,
+            "user_info": {
+                "doc_id": usuario.doc_id,
+                "user_id": usuario.id
+            },
+            "chat_stats": {
+                "total_messages": len(mensajes),
+                "score": usuario.chat.score,
+                "chat_id": usuario.chat.id
+            },
+            "messages": processed_messages,
+            "sentiment_analysis": {
+                "avg_confidence": avg_confidence,
+                "dominant_sentiment": dominant_sentiment,
+                "sentiment_counts": sentiment_counts
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error obteniendo detalles del chat: {str(e)}")
+
 # ENDPOINT PARA PRUEBAS DEL SISTEMA DE SENTIMIENTOS
 @app.post('/test/sentiment')
 def test_sentiment_system():

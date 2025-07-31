@@ -1,10 +1,10 @@
 # Dependencias del Backend LEAN BOT
-fastapi==0.104.1
-uvicorn==0.24.0
-sqlalchemy==2.0.21
-pydantic==2.4.2
-requests==2.31.0
-python-multipart==0.0.6
+fastapi>=0.104.1
+uvicorn[standard]>=0.24.0
+sqlalchemy>=2.0.21
+pydantic>=2.4.2
+requests>=2.31.0
+python-multipart>=0.0.6
 
 # Para análisis de sentimientos con BETO
 transformers>=4.35.0
@@ -12,6 +12,6 @@ torch>=2.2.0
 numpy>=1.24.3
 pandas>=2.0.3
 
-# Para desarrollo
-pytest==7.4.3
-pytest-asyncio==0.21.1
+# Para desarrollo y testing
+pytest>=7.4.3
+pytest-asyncio>=0.21.1

@@ -21,7 +21,7 @@ class ChatUpdate(ChatBase):
 class ChatOut(ChatBase):
     id: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class MessageRequest(BaseModel):
     message: str
@@ -46,4 +46,4 @@ class UsuarioOut(UsuarioBase):
     id: str
     chat: ChatOut
     class Config:
-        orm_mode = True
+        from_attributes = True
