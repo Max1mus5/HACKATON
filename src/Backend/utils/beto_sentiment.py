@@ -35,7 +35,7 @@ class BetoSentimentAnalyzer:
             self._initialize_model()
         else:
             self.device = "cpu"  # Valor por defecto cuando transformers no está disponible
-            logger.warning("BETO no disponible - usando análisis básico")
+            logger.warning("BETO no disponible - usando análisis básico de palabras clave")
     
     def _initialize_model(self):
         """
