@@ -1,6 +1,7 @@
 
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from typing import Union
 from .database import engine, Base, Session as DBSession
@@ -513,3 +514,8 @@ def test_sentiment_system():
             "status": "error",
             "message": f"Error en prueba del sistema: {str(e)}"
         }
+
+# Configurar archivos estáticos al final para que no interfiera con las rutas de la API
+static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "public")
+if os.path.exists(static_dir):
+    app.mount("/", StaticFiles(directory=static_dir, html=True), name="static")
