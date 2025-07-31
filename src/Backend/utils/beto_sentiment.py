@@ -6,8 +6,15 @@ Modelo: finiteautomata/beto-sentiment-analysis
 import os
 import logging
 from typing import Dict, Optional, Tuple
-from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
-import torch
+
+# Importaciones con manejo de errores
+try:
+    from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+    import torch
+    TRANSFORMERS_AVAILABLE = True
+except ImportError as e:
+    print(f"⚠️ Warning: transformers no disponible: {e}")
+    TRANSFORMERS_AVAILABLE = False
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
@@ -21,13 +28,21 @@ class BetoSentimentAnalyzer:
     def __init__(self):
         self.model_name = "finiteautomata/beto-sentiment-analysis"
         self.analyzer = None
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self._initialize_model()
+        self.available = TRANSFORMERS_AVAILABLE
+        
+        if TRANSFORMERS_AVAILABLE:
+            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            self._initialize_model()
+        else:
+            logger.warning("BETO no disponible - usando análisis básico")
     
     def _initialize_model(self):
         """
         Inicializa el modelo BETO para análisis de sentimientos
         """
+        if not TRANSFORMERS_AVAILABLE:
+            return
+            
         try:
             logger.info(f"Inicializando modelo BETO en dispositivo: {self.device}")
             
@@ -56,7 +71,7 @@ class BetoSentimentAnalyzer:
         Returns:
             Dict con el análisis de sentimiento
         """
-        if not self.analyzer:
+        if not TRANSFORMERS_AVAILABLE or not self.analyzer:
             logger.warning("Modelo BETO no disponible, usando análisis básico")
             return self._fallback_analysis(text)
         
