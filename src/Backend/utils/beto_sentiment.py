@@ -8,16 +8,27 @@ import logging
 from typing import Dict, Optional, Tuple
 
 # Importaciones con manejo de errores
+TRANSFORMERS_AVAILABLE = False
+TORCH_AVAILABLE = False
+torch = None
+pipeline = None
+AutoTokenizer = None
+AutoModelForSequenceClassification = None
+
 try:
     from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
-    import torch
     TRANSFORMERS_AVAILABLE = True
-    TORCH_AVAILABLE = True
+    print("✅ Transformers importado correctamente")
 except ImportError as e:
     print(f"⚠️ Warning: transformers no disponible: {e}")
-    TRANSFORMERS_AVAILABLE = False
-    TORCH_AVAILABLE = False
-    torch = None  # Definir torch como None para evitar errores
+
+try:
+    import torch
+    TORCH_AVAILABLE = True
+    print("✅ Torch importado correctamente")
+except ImportError as e:
+    print(f"⚠️ Warning: torch no disponible: {e}")
+    torch = None
 
 # Configurar logging
 logging.basicConfig(level=logging.INFO)
