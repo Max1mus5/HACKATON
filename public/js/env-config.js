@@ -14,10 +14,23 @@ const ENV_CONFIG = {
     
     // Detectar automáticamente el entorno
     getBaseURL: function() {
-        // Backend URL hardcodeado apuntando a Render
-        const baseURL = "https://hackaton-d1h6.onrender.com";
-        console.log('🌐 ENV_CONFIG: Usando BASE_URL hardcodeado:', baseURL);
-        return baseURL;
+        // Detectar si estamos en Vercel o desarrollo local
+        if (window.location.hostname.includes('vercel.app')) {
+            // En Vercel, usar rutas relativas
+            const baseURL = window.location.origin;
+            console.log('🌐 ENV_CONFIG: Usando Vercel:', baseURL);
+            return baseURL;
+        } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // En desarrollo local
+            const baseURL = "http://localhost:8000";
+            console.log('🌐 ENV_CONFIG: Usando desarrollo local:', baseURL);
+            return baseURL;
+        } else {
+            // Fallback a Render
+            const baseURL = "https://hackaton-d1h6.onrender.com";
+            console.log('🌐 ENV_CONFIG: Usando Render fallback:', baseURL);
+            return baseURL;
+        }
     },
     
     // Configuración adicional

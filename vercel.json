@@ -30,6 +30,10 @@
       "destination": "/public/chat-detail.html"
     },
     {
+      "source": "/analytics",
+      "destination": "/public/analytics.html"
+    },
+    {
       "source": "/css/:path*",
       "destination": "/public/css/:path*"
     },
@@ -47,6 +51,22 @@
     },
     {
       "source": "/api/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/sentiment/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/analytics/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/usuarios/:path*",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/config/:path*",
       "destination": "/api/index"
     }
   ],
@@ -77,6 +97,11 @@
       "permanent": true
     },
     {
+      "source": "/analytics.html",
+      "destination": "/analytics",
+      "permanent": true
+    },
+    {
       "source": "/index.html",
       "destination": "/",
       "permanent": true
@@ -85,8 +110,13 @@
   "functions": {
     "api/index.py": {
       "runtime": "python3.9",
-      "memory": 1024
+      "memory": 1024,
+      "maxDuration": 30
     }
+  },
+  "env": {
+    "GEMINI_API_KEY": "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0",
+    "TRANSFORMERS_CACHE": "/tmp/transformers_cache"
   },
   "cleanUrls": true,
   "trailingSlash": false

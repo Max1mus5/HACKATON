@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# API routes
+RewriteRule ^api/(.*)$ /api/index [L]
+RewriteRule ^sentiment/(.*)$ /api/index [L]
+RewriteRule ^analytics/(.*)$ /api/index [L]
+RewriteRule ^usuarios/(.*)$ /api/index [L]
+RewriteRule ^config/(.*)$ /api/index [L]
+
+# SPA fallback
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]

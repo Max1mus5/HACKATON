@@ -33,4 +33,4 @@ def handler(request, response):
 
 # Exportar la aplicación para Vercel
 # Vercel buscará automáticamente 'app' o 'handler'
-app = app
+# app = app

@@ -279,6 +279,9 @@
         </div>
     </div>
 
+    <!-- Scripts de configuración -->
+    <script src="js/env-config.js"></script>
+    
     <script>
         let charts = {};
         
@@ -289,12 +292,25 @@
 
         async function loadDashboardData() {
             try {
+                // Obtener la URL base correcta
+                const baseURL = window.ENV_CONFIG ? ENV_CONFIG.getBaseURL() : '';
+                
                 // Cargar información del modelo
-                const modelInfo = await fetch('/sentiment/model-info').then(r => r.json());
+                console.log('🔍 Cargando información del modelo...');
+                const modelInfoResponse = await fetch(`${baseURL}/sentiment/model-info`);
+                if (!modelInfoResponse.ok) {
+                    throw new Error(`Error ${modelInfoResponse.status}: ${modelInfoResponse.statusText}`);
+                }
+                const modelInfo = await modelInfoResponse.json();
                 displayModelInfo(modelInfo);
 
                 // Cargar datos del dashboard
-                const dashboardData = await fetch('/analytics/dashboard').then(r => r.json());
+                console.log('📊 Cargando datos del dashboard...');
+                const dashboardResponse = await fetch(`${baseURL}/analytics/dashboard`);
+                if (!dashboardResponse.ok) {
+                    throw new Error(`Error ${dashboardResponse.status}: ${dashboardResponse.statusText}`);
+                }
+                const dashboardData = await dashboardResponse.json();
                 
                 // Actualizar métricas
                 updateMetrics(dashboardData);
@@ -310,8 +326,11 @@
                 displayActiveConversations(dashboardData.active_conversations);
                 
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
-                showError('Error al cargar los datos del dashboard');
+                console.error('❌ Error loading dashboard data:', error);
+                showError(`Error al cargar los datos del dashboard: ${error.message}`);
+                
+                // Mostrar información de fallback
+                displayFallbackInfo();
             }
         }
 
@@ -620,13 +639,37 @@
             return `${Math.floor(diffMins / 1440)}d`;
         }
 
+        function displayFallbackInfo() {
+            // Mostrar información básica cuando la API no está disponible
+            const modelContainer = document.getElementById('modelInfo');
+            if (modelContainer) {
+                modelContainer.innerHTML = `
+                    <div class="alert alert-warning">
+                        <strong>⚠️ API no disponible</strong><br>
+                        Conectando con el backend...
+                    </div>
+                `;
+            }
+            
+            // Mostrar métricas de ejemplo
+            updateMetrics({
+                total_messages: 0,
+                avg_confidence: 0,
+                positive_ratio: 0,
+                negative_ratio: 0,
+                neutral_ratio: 0
+            });
+        }
+
         function showError(message) {
             const container = document.querySelector('.analytics-container');
             container.innerHTML = `
                 <div class="alert alert-danger text-center">
-                    <h4>Error</h4>
+                    <h4>❌ Error de Conexión</h4>
                     <p>${message}</p>
-                    <button class="btn btn-warning" onclick="location.reload()">Reintentar</button>
+                    <p><small>Verifica que el backend esté funcionando correctamente.</small></p>
+                    <button class="btn btn-warning" onclick="location.reload()">🔄 Reintentar</button>
+                    <a href="/chat" class="btn btn-secondary ms-2">← Volver al Chat</a>
                 </div>
             `;
         }
