@@ -31,7 +31,10 @@ class BetoSentimentAnalyzer:
         self.available = TRANSFORMERS_AVAILABLE
         
         if TRANSFORMERS_AVAILABLE:
-            self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            try:
+                self.device = "cuda" if torch.cuda.is_available() else "cpu"
+            except:
+                self.device = "cpu"
             self._initialize_model()
         else:
             self.device = "cpu"  # Valor por defecto cuando transformers no está disponible
