@@ -1,0 +1,40 @@
+# Archivos de desarrollo
+src/Backend/__pycache__/
+src/Backend/.env
+src/Backend/lean_chatbot.db
+src/Backend/*.pyc
+src/Backend/**/*.pyc
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Archivos de configuración local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+*.log
+logs/
+
+# Node modules (si existen)
+node_modules/
+
+# Archivos temporales
+.DS_Store
+Thumbs.db
+
+# Archivos de prueba
+test_leanbot.py
+start_backend.py
+
+# README de desarrollo
+README_LEANBOT.md

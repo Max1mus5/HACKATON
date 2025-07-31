@@ -1,0 +1,52 @@
+{
+  "faq": [
+    {
+      "question": "1. ¿Qué es Ingelean?",
+      "answer": "Ingelean es una empresa colombiana fundada en 2013 que diseña y desarrolla soluciones personalizadas en ingeniería, hardware, software y automatización industrial, con enfoque en tecnologías 4.0."
+    },
+    {
+      "question": "2. ¿Qué servicios ofrece Ingelean?",
+      "answer": "Ofrece diseño de sistemas electrónicos, automatización de procesos industriales, integración de sensores, controladores programables, desarrollo de software embebido y soluciones de monitoreo remoto."
+    },
+    {
+      "question": "3. ¿Desarrollan productos propios o solo a medida?",
+      "answer": "Sí, Ingelean desarrolla tanto productos estándar como soluciones a medida, adaptadas a las necesidades específicas de cada empresa o proceso productivo."
+    },
+    {
+      "question": "4. ¿Qué tipo de hardware diseña Ingelean?",
+      "answer": "Diseñan tarjetas electrónicas personalizadas, módulos de control, interfaces para maquinaria industrial y sistemas de adquisición de datos compatibles con múltiples protocolos."
+    },
+    {
+      "question": "5. ¿También desarrollan software?",
+      "answer": "Sí, ofrecen software a medida para control, monitoreo, visualización y gestión de procesos industriales, incluyendo plataformas web y móviles."
+    },
+    {
+      "question": "6. ¿Qué tipo de empresas pueden beneficiarse de sus servicios?",
+      "answer": "Empresas de manufactura, agroindustria, logística, energía y cualquier organización que requiera automatizar procesos o integrar tecnología avanzada en sus operaciones."
+    },
+    {
+      "question": "7. ¿Ofrecen servicios de mantenimiento o soporte técnico?",
+      "answer": "Sí, brindan soporte técnico especializado, mantenimiento correctivo y preventivo de sistemas electrónicos y automatizados implementados."
+    },
+    {
+      "question": "8. ¿Pueden integrar sus soluciones con sistemas existentes?",
+      "answer": "Sí, Ingelean ofrece integración con equipos y sistemas preexistentes, facilitando la digitalización progresiva sin reemplazar completamente la infraestructura actual."
+    },
+    {
+      "question": "9. ¿Dónde están ubicados y a qué regiones atienden?",
+      "answer": "Su sede está en Pereira, Risaralda (Colombia), y atienden clientes a nivel nacional. También han iniciado procesos de internacionalización en países como Paraguay."
+    },
+    {
+      "question": "10. ¿Cómo se puede contactar a Ingelean?",
+      "answer": "Puedes escribir a haroldherrera@ingelean.com, visitar su sitio web www.ingelean.com o contactarlos por redes sociales como Instagram: @inge.lean."
+    },
+    {
+      "question": "11. Felicitaciones, Dudas, Quejas y Reclamos",
+      "answer": ""
+    },
+    {
+      "question": "12. Dejanos tus comentarios",
+      "answer": "Escribe tus comentarios"
+    }
+  ]
+}

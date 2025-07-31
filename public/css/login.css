@@ -1,0 +1,259 @@
+/* Login page specific styles */
+:root {
+  --color-dust-storm: #e4cfcd;
+  --color-spicy-mix: #7d4e3f;
+  --color-taupe: #413530;
+  --color-crowshead: #150605;
+  --color-rangoon-green: #060504;
+  --color-accent-orange: #FF6600;
+  --color-white: #ffffff;
+  
+  /* Semantic color variables */
+  --bg-primary: var(--color-rangoon-green);
+  --bg-secondary: var(--color-crowshead);
+  --text-primary: var(--color-white);
+  --text-secondary: var(--color-dust-storm);
+  --accent-primary: var(--color-accent-orange);
+  --accent-secondary: var(--color-spicy-mix);
+  --border-color: var(--color-taupe);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 28rem; /* max-w-md */
+}
+
+/* Logo and header section */
+.login-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.logo-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 1rem;
+}
+
+.logo-icon img {
+  width: 4rem;
+  height: 4rem;
+  object-fit: contain;
+}
+
+.login-title {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.login-subtitle {
+  color: var(--border-color);
+  font-size: 1.125rem;
+}
+
+/* Card component */
+.card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.card-header {
+  text-align: center;
+  padding: 1.5rem 1.5rem 1rem 1.5rem;
+}
+
+.card-title {
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  font-weight: 600;
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.card-content {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+}
+
+/* Form styles */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Input component */
+.input {
+  width: 100%;
+  height: 3rem;
+  padding: 0 0.75rem;
+  background-color: var(--border-color);
+  border: 1px solid var(--accent-secondary);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.input::placeholder {
+  color: rgba(228, 207, 205, 0.6);
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.1);
+}
+
+/* Button component */
+.button {
+  width: 100%;
+  height: 3rem;
+  background-color: var(--accent-primary);
+  color: var(--bg-primary);
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button:hover:not(:disabled) {
+  background-color: rgba(255, 102, 0, 0.9);
+  transform: scale(1.02);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Admin link */
+.admin-link {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.admin-link a {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 0.2s ease-in-out;
+}
+
+.admin-link a:hover {
+  color: rgba(255, 102, 0, 0.8);
+}
+
+/* Responsive design */
+@media (max-width: 640px) {
+  .login-container {
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+  
+  .login-title {
+    font-size: 2rem;
+  }
+  
+  .login-subtitle {
+    font-size: 1rem;
+  }
+  
+  .card {
+    margin: 1rem 0;
+  }
+  
+  .card-header,
+  .card-content {
+    padding: 1rem;
+  }
+  
+  .input,
+  .button {
+    height: 2.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-title {
+    font-size: 1.75rem;
+  }
+  
+  .logo-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+  
+  .logo-icon img {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+}
+
+/* Focus and accessibility */
+.input:focus,
+.button:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Animation for loading state */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading {
+  animation: spin 1s linear infinite;
+}

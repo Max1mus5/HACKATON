@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - LEAN</title>
+    <link rel="icon" type="image/png" href="img/Favicon.png">
+    <link href="css/admin.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <div>
+                <h1 class="admin-title">Panel de Administración</h1>
+                <p class="admin-subtitle">Sistema LEAN - Análisis y Gestión</p>
+            </div>
+            <div class="header-buttons">
+                <button id="export-data" class="button">
+                    <!-- Download SVG icon -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7,10 12,15 17,10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Exportar Datos
+                </button>
+                <button id="deep-analysis" class="button">
+                    <!-- BarChart3 SVG icon -->
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"/>
+                        <path d="M18 17V9"/>
+                        <path d="M13 17V5"/>
+                        <path d="M8 17v-3"/>
+                    </svg>
+                    Análisis Profundo
+                </button>
+                <button class="logout-btn" onclick="LoginManager.logout()" style="margin-left: 10px; padding: 8px 16px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16,17 21,12 16,7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <!-- Users SVG icon -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                            <circle cx="12" cy="7" r="4"/>
+                        </svg>
+                        Total Usuarios
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="stat-value" id="total-users">1,247</div>
+                    <p class="stat-change">+12% vs mes anterior</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <!-- MessageSquare SVG icon -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>
+                        </svg>
+                        Total Chats
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="stat-value" id="total-chats">3,891</div>
+                    <p class="stat-change">+8% vs mes anterior</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <!-- TrendingUp SVG icon -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22,7 13.5,15.5 8.5,10.5 2,17"/>
+                            <polyline points="16,7 22,7 22,13"/>
+                        </svg>
+                        Sentimiento Promedio
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="stat-value stat-positive" id="avg-sentiment">72%</div>
+                    <p class="stat-change">Positivo general</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <!-- Clock SVG icon -->
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        Tiempo Respuesta
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="stat-value" id="avg-response-time">2.3s</div>
+                    <p class="stat-change">-0.5s vs mes anterior</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <div class="tabs-list">
+                <button class="tabs-trigger active" data-tab="chats">
+                    Conversaciones Recientes
+                </button>
+                <button class="tabs-trigger" data-tab="keywords">
+                    Palabras Clave
+                </button>
+                <button class="tabs-trigger" data-tab="analytics">
+                    Analíticas
+                </button>
+            </div>
+
+            <!-- Chats Tab -->
+            <div id="tab-chats" class="tabs-content active">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="search-container">
+                            <div class="card-title">Conversaciones Recientes</div>
+                            <div class="search-wrapper">
+                                <div class="search-input-wrapper">
+                                    <!-- Search SVG icon -->
+                                    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"/>
+                                        <path d="m21 21-4.35-4.35"/>
+                                    </svg>
+                                    <input 
+                                        id="search-input"
+                                        type="text" 
+                                        placeholder="Buscar por usuario..." 
+                                        class="search-input"
+                                    />
+                                </div>
+                                <button id="filter-button" class="button button-sm">
+                                    <!-- Filter SVG icon -->
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-content">
+                        <div id="chat-list" class="chat-list">
+                            <!-- Chat items will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keywords Tab -->
+            <div id="tab-keywords" class="tabs-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Palabras Clave Más Frecuentes</div>
+                    </div>
+                    <div class="card-content">
+                        <div id="keywords-grid" class="keywords-grid">
+                            <!-- Keywords will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="tab-analytics" class="tabs-content">
+                <div class="analytics-grid">
+                    <!-- Sentiment Distribution -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Distribución de Sentimientos</div>
+                        </div>
+                        <div class="card-content">
+                            <div class="sentiment-item">
+                                <div class="sentiment-header">
+                                    <span class="sentiment-label">Positivo</span>
+                                    <span class="sentiment-percentage positive" id="percentage-positive">65%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill positive" id="progress-positive" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="sentiment-item">
+                                <div class="sentiment-header">
+                                    <span class="sentiment-label">Neutral</span>
+                                    <span class="sentiment-percentage neutral" id="percentage-neutral">25%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill neutral" id="progress-neutral" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="sentiment-item">
+                                <div class="sentiment-header">
+                                    <span class="sentiment-label">Negativo</span>
+                                    <span class="sentiment-percentage negative" id="percentage-negative">10%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill negative" id="progress-negative" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Actividad por Hora</div>
+                        </div>
+                        <div class="card-content">
+                            <div id="activity-chart" class="activity-chart">
+                                <!-- Activity bars will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/env-config.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

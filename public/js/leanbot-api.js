@@ -1,0 +1,490 @@
+// Configuración para LEAN BOT integrado con backend
+class LeanBotAPI {
+    constructor() {
+        // Detectar automáticamente la URL base según el entorno
+        this.baseURL = this.getBaseURL();
+        this.currentUserId = this.getUserId();
+        this.currentChatId = null;
+        this.isBackendAvailable = false;
+        
+        // Configuración de IA - cargar desde localStorage
+        this.loadAIConfiguration();
+        
+        this.checkBackendAvailability();
+    }
+
+    // Detectar la URL base según el entorno
+    getBaseURL() {
+        // Backend URL hardcodeado apuntando a Render
+        const baseURL = 'https://hackaton-d1h6.onrender.com';
+        console.log('🌐 Usando BASE_URL hardcodeado:', baseURL);
+        return baseURL;
+    }
+
+    // Obtener ID de usuario desde la sesión de login o generar uno temporal
+    getUserId() {
+        // Primero intentar obtener el doc_id de la sesión de login
+        const session = localStorage.getItem('lean_session');
+        if (session) {
+            try {
+                const sessionData = JSON.parse(session);
+                if (sessionData.doc_id) {
+                    // Usar el documento del usuario logueado (mantener como string para consistencia)
+                    const docId = String(sessionData.doc_id);
+                    console.log(`👤 Usando documento de usuario logueado: ${docId}`);
+                    return docId;
+                }
+            } catch (error) {
+                console.warn('Error al parsear sesión:', error);
+            }
+        }
+        
+        // Fallback: usar lean_bot_user_id si existe (para compatibilidad)
+        let userId = localStorage.getItem('lean_bot_user_id');
+        if (!userId) {
+            // Solo generar timestamp si no hay sesión de login
+            userId = Date.now();
+            localStorage.setItem('lean_bot_user_id', userId);
+            console.log(`🔄 Generando ID temporal: ${userId}`);
+        }
+        return parseInt(userId);
+    }
+
+    // Cargar configuración de IA desde localStorage
+    loadAIConfiguration() {
+        // Cargar proveedor de IA
+        this.aiProvider = localStorage.getItem('ai_provider') || 'gemini';
+        
+        // Cargar API key personalizada si existe
+        const apiKeyKey = `ai_api_key_${this.aiProvider}`;
+        this.customApiKey = localStorage.getItem(apiKeyKey) || null;
+        
+        console.log(`🤖 Configuración de IA cargada: ${this.aiProvider}${this.customApiKey ? ' (con API key personalizada)' : ''}`);
+    }
+
+    // Guardar configuración de IA en localStorage
+    saveAIConfiguration() {
+        localStorage.setItem('ai_provider', this.aiProvider);
+        
+        if (this.customApiKey) {
+            const apiKeyKey = `ai_api_key_${this.aiProvider}`;
+            localStorage.setItem(apiKeyKey, this.customApiKey);
+        }
+        
+        console.log(`💾 Configuración de IA guardada: ${this.aiProvider}`);
+    }
+
+    // Limpiar datos específicos del chat para nueva sesión
+    clearChatData() {
+        console.log('Limpiando datos específicos del chat...');
+        
+        // Resetear variables de instancia
+        this.currentChatId = null;
+        
+        // Limpiar datos específicos del chat en localStorage
+        const chatKeys = [
+            'currentChatId',
+            'chatHistory',
+            'userMessages',
+            'botResponses',
+            'lastMessageId',
+            'conversationState'
+        ];
+        
+        chatKeys.forEach(key => {
+            localStorage.removeItem(key);
+            console.log(`Chat data cleared: ${key}`);
+        });
+        
+        console.log('Datos del chat limpiados para nueva sesión');
+    }
+
+    // Verificar si el backend está disponible
+    async checkBackendAvailability() {
+        try {
+            const response = await fetch(`${this.baseURL}/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.isBackendAvailable = true;
+                console.log('✅ Backend LEAN BOT disponible:', data.message);
+                
+                // Configurar API key de Gemini
+                await this.configureGeminiAPI();
+                
+                await this.initializeUser();
+            } else {
+                throw new Error('Backend no responde correctamente');
+            }
+        } catch (error) {
+            console.warn('⚠️ Backend LEAN BOT no disponible:', error.message);
+            this.isBackendAvailable = false;
+        }
+    }
+
+    // Configurar API key de Gemini en el backend
+    async configureGeminiAPI() {
+        try {
+            // Intentar obtener la API key desde diferentes fuentes
+            let apiKey = null;
+            
+            // 1. Desde config.js
+            if (typeof API_CONFIG !== 'undefined' && API_CONFIG.geminiApiKey) {
+                apiKey = API_CONFIG.geminiApiKey;
+            }
+            
+            // 2. Desde localStorage (configuración previa)
+            if (!apiKey) {
+                apiKey = localStorage.getItem('gemini_api_key');
+            }
+            
+            // 3. Variable de entorno o API key por defecto
+            if (!apiKey) {
+                // Intentar obtener de variable de entorno
+                if (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) {
+                    apiKey = process.env.GEMINI_API_KEY;
+                } else {
+                    // API key por defecto
+                    apiKey = "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0";
+                }
+            }
+            
+            if (apiKey && apiKey.trim() !== '') {
+                const response = await fetch(`${this.baseURL}/config/gemini_api_key`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        api_key: apiKey
+                    })
+                });
+                
+                if (response.ok) {
+                    console.log('✅ API key de Gemini configurada en el backend');
+                } else {
+                    console.warn('⚠️ Error configurando API key de Gemini');
+                }
+            } else {
+                console.warn('⚠️ API key de Gemini no encontrada. El scoring automático usará valores por defecto.');
+            }
+        } catch (error) {
+            console.warn('⚠️ Error configurando API key de Gemini:', error);
+        }
+    }
+
+    // Inicializar usuario en el backend (obtiene existente o crea nuevo)
+    async initializeUser() {
+        try {
+            console.log(`🔄 Inicializando usuario con doc_id: ${this.currentUserId}`);
+            
+            const response = await fetch(`${this.baseURL}/usuarios/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    doc_id: this.currentUserId
+                })
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                this.currentChatId = userData.chat.id;
+                
+                // Verificar si es usuario existente o nuevo
+                const isExisting = userData.chat.mensajes && userData.chat.mensajes.length > 0;
+                console.log(`✅ Usuario ${isExisting ? 'existente recuperado' : 'nuevo creado'}:`, {
+                    doc_id: userData.doc_id,
+                    chat_id: userData.chat.id,
+                    mensajes_existentes: userData.chat.mensajes ? userData.chat.mensajes.length : 0
+                });
+                
+                return userData;
+            } else {
+                throw new Error('No se pudo inicializar usuario');
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar usuario:', error);
+            this.isBackendAvailable = false;
+            return null;
+        }
+    }
+
+    // Enviar mensaje al backend con LEAN BOT
+    async sendMessage(userMessage) {
+        if (!this.isBackendAvailable || !this.currentChatId) {
+            console.warn('Backend no disponible, usando fallback local');
+            return this.fallbackResponse(userMessage);
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}/usuarios/${this.currentUserId}/message`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: userMessage,
+                    timestamp: new Date().toISOString(),
+                    ai_provider: this.aiProvider,
+                    api_key: this.customApiKey
+                })
+            });
+
+            if (response.ok) {
+                const messageData = await response.json();
+                console.log('✅ Respuesta del backend:', messageData);
+                return messageData;
+            } else {
+                throw new Error(`Error ${response.status}: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error('❌ Error al enviar mensaje:', error);
+            return this.fallbackResponse(userMessage);
+        }
+    }
+
+    // Respuesta de fallback cuando el backend no está disponible
+    fallbackResponse(userMessage) {
+        const fallbackResponses = [
+            "Hola, soy LEAN BOT de INGE LEAN. Actualmente estoy en modo offline, pero pronto estaré completamente disponible.",
+            "Gracias por tu mensaje. LEAN BOT está temporalmente en mantenimiento. ¿Podrías intentarlo más tarde?",
+            "Soy el asistente virtual de INGE LEAN. En este momento tengo conectividad limitada, pero estaré disponible pronto."
+        ];
+
+        const randomResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
+        
+        return {
+            message: userMessage,
+            response: randomResponse,
+            score: 5.0,
+            timestamp: new Date().toISOString(),
+            fallback: true
+        };
+    }
+
+    // Obtener historial del chat
+    async getChatHistory() {
+        if (!this.isBackendAvailable || !this.currentUserId) {
+            return [];
+        }
+
+        try {
+            // Usar el nuevo endpoint que devuelve solo los mensajes
+            const response = await fetch(`${this.baseURL}/usuarios/${this.currentUserId}/messages`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log('📋 Historial obtenido:', data.mensajes ? data.mensajes.length : 0, 'mensajes');
+                return data.mensajes || [];
+            } else {
+                console.warn('No se pudo obtener historial del chat');
+                return [];
+            }
+        } catch (error) {
+            console.error('Error al obtener historial:', error);
+            return [];
+        }
+    }
+
+    // Probar conexión con Gemini
+    async testGeminiConnection() {
+        try {
+            const response = await fetch(`${this.baseURL}/test/gemini`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('🤖 Estado de Gemini:', result);
+                return result;
+            } else {
+                return { status: 'error', message: 'No se pudo probar Gemini' };
+            }
+        } catch (error) {
+            console.error('Error al probar Gemini:', error);
+            return { status: 'error', message: error.message };
+        }
+    }
+
+    // Obtener estadísticas del chat
+    async getChatStats() {
+        if (!this.isBackendAvailable || !this.currentChatId) {
+            return null;
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}/chats/${this.currentChatId}/score`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const scoreData = await response.json();
+                return scoreData;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Error al obtener estadísticas:', error);
+            return null;
+        }
+    }
+
+    // MÉTODOS PARA CONFIGURACIÓN DE IA
+    
+    // Configurar proveedor de IA
+    setAIProvider(provider, apiKey = null) {
+        const validProviders = ['gemini', 'mistral'];
+        if (!validProviders.includes(provider)) {
+            console.error(`❌ Proveedor no válido: ${provider}. Opciones: ${validProviders.join(', ')}`);
+            return false;
+        }
+        
+        this.aiProvider = provider;
+        this.customApiKey = apiKey;
+        
+        // Guardar configuración en localStorage
+        this.saveAIConfiguration();
+        
+        console.log(`🤖 Proveedor de IA configurado: ${provider}${apiKey ? ' (con API key personalizada)' : ''}`);
+        return true;
+    }
+    
+    // Obtener configuración actual de IA
+    getCurrentAIConfig() {
+        return {
+            provider: this.aiProvider,
+            apiKey: this.customApiKey
+        };
+    }
+    
+    // Obtener proveedores disponibles
+    async getAvailableProviders() {
+        if (!this.isBackendAvailable) {
+            return { providers: ['gemini'], default: 'gemini' };
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}/ai/providers`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('🤖 Proveedores disponibles:', result);
+                return result;
+            } else {
+                return { providers: ['gemini'], default: 'gemini' };
+            }
+        } catch (error) {
+            console.error('Error al obtener proveedores:', error);
+            return { providers: ['gemini'], default: 'gemini' };
+        }
+    }
+    
+    // Probar conexión con un proveedor específico
+    async testAIProvider(provider, apiKey = null) {
+        if (!this.isBackendAvailable) {
+            return { provider, working: false, error: 'Backend no disponible' };
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}/ai/test`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    provider: provider,
+                    api_key: apiKey
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log(`🧪 Prueba de ${provider}:`, result);
+                return result;
+            } else {
+                return { provider, working: false, error: 'Error en la petición' };
+            }
+        } catch (error) {
+            console.error(`Error al probar ${provider}:`, error);
+            return { provider, working: false, error: error.message };
+        }
+    }
+    
+    // Obtener configuración actual
+    getCurrentAIConfig() {
+        return {
+            provider: this.aiProvider,
+            hasCustomApiKey: !!this.customApiKey
+        };
+    }
+}
+
+// Inicializar la API de LEAN BOT
+const leanBotAPI = new LeanBotAPI();
+
+// Función global para integrar con el chatbot existente
+async function getLeanBotResponse(userMessage) {
+    const response = await leanBotAPI.sendMessage(userMessage);
+    return response.response;
+}
+
+// Función para obtener respuesta completa con metadatos
+async function getLeanBotFullResponse(userMessage) {
+    return await leanBotAPI.sendMessage(userMessage);
+}
+
+// Función para mostrar información de LEAN BOT en consola
+window.leanBotInfo = function() {
+    console.log(`
+🤖 LEAN BOT - Asistente Virtual de INGE LEAN
+===============================================
+Estado del Backend: ${leanBotAPI.isBackendAvailable ? '✅ Conectado' : '❌ Desconectado'}
+Usuario ID: ${leanBotAPI.currentUserId}
+Chat ID: ${leanBotAPI.currentChatId || 'No disponible'}
+URL Backend: ${leanBotAPI.baseURL}
+
+Funciones disponibles:
+- leanBotAPI.sendMessage(mensaje)
+- leanBotAPI.getChatHistory()
+- leanBotAPI.testGeminiConnection()
+- leanBotAPI.getChatStats()
+
+Configuración de IA:
+- leanBotAPI.setAIProvider(provider, apiKey) // 'gemini' o 'mistral'
+- leanBotAPI.getAvailableProviders()
+- leanBotAPI.testAIProvider(provider, apiKey)
+- leanBotAPI.getCurrentAIConfig()
+
+Ejemplo: leanBotAPI.setAIProvider('mistral', 'tu_api_key')
+===============================================
+    `);
+};
+
+// Mostrar información al cargar
+console.log('🤖 LEAN BOT iniciado. Usa leanBotInfo() para más información.');
+
+// Exportar la instancia para uso global
+window.leanBotAPI = leanBotAPI;

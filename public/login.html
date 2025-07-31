@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LEAN - Sistema de Chat Inteligente</title>
+    <link rel="icon" type="image/png" href="img/Favicon.png">
+    <link href="css/login.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="login-container">
+        <!-- Logo and header section -->
+        <div class="login-header">
+            <div class="logo-icon">
+                <img src="img/LOGO LEAN.png" alt="LEAN Logo" />
+            </div>
+            <h1 class="login-title">LEAN</h1>
+            <p class="login-subtitle">Sistema de Chat Inteligente</p>
+        </div>
+
+        <!-- Login card -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Acceso al Sistema</h2>
+            </div>
+            <div class="card-content">
+                <form id="login-form" novalidate>
+                    <div class="form-group">
+                        <label for="documento" class="form-label">
+                            Documento de Identidad o Nombre
+                        </label>
+                        <input
+                            id="documento"
+                            type="text"
+                            placeholder="Ingrese su documento o nombre"
+                            class="input"
+                            autocomplete="username"
+                            required
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <button
+                            id="login-button"
+                            type="button"
+                            class="button"
+                            disabled
+                        >
+                            <!-- Shield SVG icon -->
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>
+                            </svg>
+                            Ingresar al Chat
+                        </button>
+                    </div>
+
+                    <div class="admin-link">
+                        <a href="admin">
+                            Panel de Administración
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/env-config.js"></script>
+    <script src="js/login.js"></script>
+</body>
+</html>

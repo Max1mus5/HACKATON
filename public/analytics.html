@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - LEAN BOT</title>
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-container {
+            background: var(--background-dark);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .analytics-header {
+            background: linear-gradient(135deg, var(--color-spicy-mix), var(--color-accent-orange));
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .metric-card {
+            background: var(--color-crowshead);
+            border: 1px solid var(--color-taupe);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--color-accent-orange);
+        }
+        
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--color-accent-orange);
+        }
+        
+        .metric-label {
+            color: var(--color-dust-storm);
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+        
+        .chart-container {
+            background: var(--color-crowshead);
+            border: 1px solid var(--color-taupe);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .sentiment-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .sentiment-positive {
+            background: #28a745;
+            color: white;
+        }
+        
+        .sentiment-negative {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .sentiment-neutral {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .conversation-item {
+            background: var(--color-crowshead);
+            border: 1px solid var(--color-taupe);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+        
+        .keyword-tag {
+            background: var(--color-spicy-mix);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin: 2px;
+            display: inline-block;
+        }
+        
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .refresh-btn {
+            background: var(--color-accent-orange);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: #e55a00;
+        }
+        
+        .model-info {
+            background: var(--color-crowshead);
+            border: 1px solid var(--color-taupe);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .model-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-active {
+            background: #28a745;
+        }
+        
+        .status-inactive {
+            background: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="analytics-container">
+        <!-- Header -->
+        <div class="analytics-header">
+            <h1>📊 Analytics Dashboard - LEAN BOT</h1>
+            <p>Análisis avanzado de sentimientos con BETO (BERT en Español)</p>
+            <button class="refresh-btn" onclick="refreshDashboard()">🔄 Actualizar Datos</button>
+        </div>
+
+        <!-- Model Information -->
+        <div class="model-info">
+            <h5>🤖 Información del Modelo</h5>
+            <div id="modelInfo">
+                <div class="loading-spinner">
+                    <div class="spinner-border text-warning" role="status"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Overview -->
+        <div class="row">
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <div class="metric-value" id="totalMessages">-</div>
+                    <div class="metric-label">Mensajes Analizados (24h)</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <div class="metric-value" id="avgConfidence">-</div>
+                    <div class="metric-label">Confianza Promedio</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <div class="metric-value" id="dominantSentiment">-</div>
+                    <div class="metric-label">Sentimiento Dominante</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card text-center">
+                    <div class="metric-value" id="activeConversations">-</div>
+                    <div class="metric-label">Conversaciones Activas</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>📈 Distribución de Sentimientos</h5>
+                    <canvas id="sentimentChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>⏰ Tendencias por Hora</h5>
+                    <canvas id="hourlyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Analytics Row -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>🎯 Distribución de Confianza</h5>
+                    <canvas id="confidenceChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>📊 Comparativa Semanal vs 24h</h5>
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Keywords and Conversations -->
+        <div class="row">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>🔤 Palabras Clave por Sentimiento</h5>
+                    <div id="keywordsContainer">
+                        <div class="loading-spinner">
+                            <div class="spinner-border text-warning" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5>💬 Conversaciones Activas</h5>
+                    <div id="conversationsContainer">
+                        <div class="loading-spinner">
+                            <div class="spinner-border text-warning" role="status"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Test Section -->
+        <div class="chart-container">
+            <h5>🧪 Prueba del Sistema de Análisis</h5>
+            <div class="row">
+                <div class="col-md-8">
+                    <input type="text" id="testText" class="form-control" 
+                           placeholder="Escribe un texto para analizar su sentimiento..." 
+                           style="background: var(--color-crowshead); border: 1px solid var(--color-taupe); color: white;">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-warning w-100" onclick="testSentiment()">Analizar Sentimiento</button>
+                </div>
+            </div>
+            <div id="testResult" class="mt-3"></div>
+        </div>
+    </div>
+
+    <script>
+        let charts = {};
+        
+        // Configuración base para los gráficos
+        Chart.defaults.color = '#e4cfcd';
+        Chart.defaults.borderColor = '#413530';
+        Chart.defaults.backgroundColor = 'rgba(255, 102, 0, 0.1)';
+
+        async function loadDashboardData() {
+            try {
+                // Cargar información del modelo
+                const modelInfo = await fetch('/sentiment/model-info').then(r => r.json());
+                displayModelInfo(modelInfo);
+
+                // Cargar datos del dashboard
+                const dashboardData = await fetch('/analytics/dashboard').then(r => r.json());
+                
+                // Actualizar métricas
+                updateMetrics(dashboardData);
+                
+                // Crear gráficos
+                createSentimentChart(dashboardData.metrics_24h);
+                createHourlyChart(dashboardData.hourly_trends);
+                createConfidenceChart(dashboardData.metrics_24h);
+                createComparisonChart(dashboardData.metrics_24h, dashboardData.metrics_week);
+                
+                // Mostrar palabras clave y conversaciones
+                displayKeywords(dashboardData.sentiment_keywords);
+                displayActiveConversations(dashboardData.active_conversations);
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Error al cargar los datos del dashboard');
+            }
+        }
+
+        function displayModelInfo(modelInfo) {
+            const container = document.getElementById('modelInfo');
+            const statusClass = modelInfo.available ? 'status-active' : 'status-inactive';
+            const statusText = modelInfo.available ? 'Activo' : 'Inactivo';
+            
+            container.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Modelo:</strong> ${modelInfo.model_name}<br>
+                        <strong>Estado:</strong> <span class="model-status ${statusClass}"></span>${statusText}
+                    </div>
+                    <div class="col-md-6">
+                        <strong>Dispositivo:</strong> ${modelInfo.device}<br>
+                        <strong>CUDA:</strong> ${modelInfo.cuda_available ? 'Disponible' : 'No disponible'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateMetrics(data) {
+            const metrics24h = data.metrics_24h;
+            
+            document.getElementById('totalMessages').textContent = metrics24h.total_messages;
+            document.getElementById('avgConfidence').textContent = (metrics24h.average_confidence * 100).toFixed(1) + '%';
+            document.getElementById('dominantSentiment').textContent = getSentimentLabel(metrics24h.dominant_sentiment);
+            document.getElementById('activeConversations').textContent = data.active_conversations.length;
+        }
+
+        function createSentimentChart(metrics) {
+            const ctx = document.getElementById('sentimentChart').getContext('2d');
+            
+            if (charts.sentiment) {
+                charts.sentiment.destroy();
+            }
+            
+            charts.sentiment = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positivo', 'Negativo', 'Neutral'],
+                    datasets: [{
+                        data: [metrics.positive_count, metrics.negative_count, metrics.neutral_count],
+                        backgroundColor: ['#28a745', '#dc3545', '#6c757d'],
+                        borderWidth: 2,
+                        borderColor: '#413530'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createHourlyChart(hourlyTrends) {
+            const ctx = document.getElementById('hourlyChart').getContext('2d');
+            
+            if (charts.hourly) {
+                charts.hourly.destroy();
+            }
+            
+            const hours = hourlyTrends.map(h => h.hour + ':00');
+            const messageCounts = hourlyTrends.map(h => h.message_count);
+            
+            charts.hourly = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Mensajes por Hora',
+                        data: messageCounts,
+                        borderColor: '#FF6600',
+                        backgroundColor: 'rgba(255, 102, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createConfidenceChart(metrics) {
+            const ctx = document.getElementById('confidenceChart').getContext('2d');
+            
+            if (charts.confidence) {
+                charts.confidence.destroy();
+            }
+            
+            const distribution = metrics.confidence_distribution;
+            
+            charts.confidence = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Baja (<60%)', 'Media (60-80%)', 'Alta (>80%)'],
+                    datasets: [{
+                        label: 'Cantidad de Mensajes',
+                        data: [distribution.low, distribution.medium, distribution.high],
+                        backgroundColor: ['#dc3545', '#ffc107', '#28a745'],
+                        borderWidth: 1,
+                        borderColor: '#413530'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createComparisonChart(metrics24h, metricsWeek) {
+            const ctx = document.getElementById('comparisonChart').getContext('2d');
+            
+            if (charts.comparison) {
+                charts.comparison.destroy();
+            }
+            
+            charts.comparison = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Positivo', 'Negativo', 'Neutral'],
+                    datasets: [{
+                        label: 'Últimas 24h',
+                        data: [metrics24h.positive_count, metrics24h.negative_count, metrics24h.neutral_count],
+                        backgroundColor: 'rgba(255, 102, 0, 0.7)'
+                    }, {
+                        label: 'Última Semana',
+                        data: [metricsWeek.positive_count, metricsWeek.negative_count, metricsWeek.neutral_count],
+                        backgroundColor: 'rgba(125, 78, 63, 0.7)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function displayKeywords(keywords) {
+            const container = document.getElementById('keywordsContainer');
+            
+            let html = '';
+            for (const [sentiment, words] of Object.entries(keywords)) {
+                if (words.length > 0) {
+                    html += `
+                        <div class="mb-3">
+                            <h6><span class="sentiment-badge sentiment-${getSentimentClass(sentiment)}">${getSentimentLabel(sentiment)}</span></h6>
+                            <div>
+                                ${words.map(word => `<span class="keyword-tag">${word}</span>`).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            container.innerHTML = html || '<p class="text-muted">No hay palabras clave disponibles</p>';
+        }
+
+        function displayActiveConversations(conversations) {
+            const container = document.getElementById('conversationsContainer');
+            
+            if (conversations.length === 0) {
+                container.innerHTML = '<p class="text-muted">No hay conversaciones activas</p>';
+                return;
+            }
+            
+            let html = '';
+            conversations.slice(0, 5).forEach(conv => {
+                const timeAgo = getTimeAgo(conv.last_activity);
+                html += `
+                    <div class="conversation-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Usuario:</strong> ${conv.user_id}<br>
+                                <small class="text-muted">Mensajes: ${conv.message_count}</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="sentiment-badge sentiment-${getSentimentClass(conv.dominant_sentiment)}">
+                                    ${getSentimentLabel(conv.dominant_sentiment)}
+                                </span><br>
+                                <small class="text-muted">${timeAgo}</small>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        async function testSentiment() {
+            const text = document.getElementById('testText').value.trim();
+            const resultContainer = document.getElementById('testResult');
+            
+            if (!text) {
+                resultContainer.innerHTML = '<div class="alert alert-warning">Por favor, ingresa un texto para analizar</div>';
+                return;
+            }
+            
+            try {
+                resultContainer.innerHTML = '<div class="text-center"><div class="spinner-border text-warning" role="status"></div></div>';
+                
+                const response = await fetch('/sentiment/analyze', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        user_id: 'test_user',
+                        conversation_id: 'test_conversation'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                resultContainer.innerHTML = `
+                    <div class="alert alert-info">
+                        <h6>Resultado del Análisis:</h6>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <strong>Sentimiento:</strong><br>
+                                <span class="sentiment-badge sentiment-${getSentimentClass(result.sentiment)}">
+                                    ${result.label}
+                                </span>
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Confianza:</strong><br>
+                                ${(result.confidence * 100).toFixed(1)}%
+                            </div>
+                            <div class="col-md-4">
+                                <strong>Modelo:</strong><br>
+                                ${result.analysis_type || 'BETO'}
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <strong>Scores detallados:</strong><br>
+                            <small>
+                                POS: ${(result.scores.POS * 100).toFixed(1)}% | 
+                                NEG: ${(result.scores.NEG * 100).toFixed(1)}% | 
+                                NEU: ${(result.scores.NEU * 100).toFixed(1)}%
+                            </small>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Error testing sentiment:', error);
+                resultContainer.innerHTML = '<div class="alert alert-danger">Error al analizar el sentimiento</div>';
+            }
+        }
+
+        function getSentimentLabel(sentiment) {
+            const labels = {
+                'POS': 'Positivo',
+                'NEG': 'Negativo', 
+                'NEU': 'Neutral',
+                'positivo': 'Positivo',
+                'negativo': 'Negativo',
+                'neutral': 'Neutral'
+            };
+            return labels[sentiment] || sentiment;
+        }
+
+        function getSentimentClass(sentiment) {
+            const classes = {
+                'POS': 'positive',
+                'NEG': 'negative',
+                'NEU': 'neutral',
+                'positivo': 'positive',
+                'negativo': 'negative',
+                'neutral': 'neutral'
+            };
+            return classes[sentiment] || 'neutral';
+        }
+
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diffMs = now - time;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Ahora';
+            if (diffMins < 60) return `${diffMins}m`;
+            if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h`;
+            return `${Math.floor(diffMins / 1440)}d`;
+        }
+
+        function showError(message) {
+            const container = document.querySelector('.analytics-container');
+            container.innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <h4>Error</h4>
+                    <p>${message}</p>
+                    <button class="btn btn-warning" onclick="location.reload()">Reintentar</button>
+                </div>
+            `;
+        }
+
+        function refreshDashboard() {
+            // Mostrar indicador de carga
+            document.querySelectorAll('.metric-value').forEach(el => el.textContent = '-');
+            
+            // Recargar datos
+            loadDashboardData();
+        }
+
+        // Permitir análisis con Enter
+        document.getElementById('testText').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                testSentiment();
+            }
+        });
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', loadDashboardData);
+        
+        // Auto-refresh cada 5 minutos
+        setInterval(loadDashboardData, 300000);
+    </script>
+</body>
+</html>
