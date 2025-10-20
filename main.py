@@ -33,14 +33,11 @@ if __name__ == "__main__":
     print("   - Dashboard: http://localhost:PORT/dashboard.html")
     print("\n" + "="*60)
 
-    # Usar el puerto de entorno (Render) o 8000 por defecto
-    port = int(os.environ.get("PORT", 8000))
-
-    # Ejecutar el servidor
+    # Ejecutar el servidor SIEMPRE en el puerto 8000 (coherente con Render)
     uvicorn.run(
         "Backend.api:app",
         host="0.0.0.0",
-        port=port,
+        port=8000,
         reload=True,
         reload_dirs=["src"],
         log_level="info"
