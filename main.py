@@ -12,17 +12,26 @@ import uvicorn
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
 if __name__ == "__main__":
-    # Configurar variables de entorno por defecto
-    if not os.getenv("GEMINI_API_KEY"):
-        os.environ["GEMINI_API_KEY"] = "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0"
+    # Verificar y configurar API key con el gestor
+    from Backend.utils.api_key_manager import get_working_api_key
     
-    print("🚀 Iniciando LEAN BOT Server...")
+    try:
+        # Intentar obtener una API key funcional
+        active_key = get_working_api_key()
+        print(f"✅ API key funcional encontrada: {active_key[:15]}...")
+    except ValueError as e:
+        print(f"⚠️  Advertencia: {e}")
+        print("   El servidor iniciará, pero las funciones de IA pueden no estar disponibles.")
+    
+    print("\n🚀 Iniciando LEAN BOT Server...")
     print("📊 Sistema de análisis de sentimientos con BETO activado")
-    print("🔗 Endpoints disponibles:")
+    print("🤖 Sistema de múltiples API keys con fallback automático")
+    print("\n🔗 Endpoints disponibles:")
     print("   - Chat: http://localhost:12000/chat.html")
     print("   - Analytics: http://localhost:12000/analytics.html")
     print("   - API Docs: http://localhost:12000/docs")
     print("   - Dashboard: http://localhost:12000/dashboard.html")
+    print("\n" + "="*60)
     
     # Ejecutar el servidor
     uvicorn.run(

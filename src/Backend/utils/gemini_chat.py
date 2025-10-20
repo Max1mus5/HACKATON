@@ -2,12 +2,24 @@ import requests
 import json
 import os
 from typing import Dict, Any
+from .api_key_manager import get_working_api_key, get_api_key_manager
 
 class GeminiChatService:
     def __init__(self, api_key: str = None):
-        # Usar variable de entorno si está disponible, sino usar API key por defecto
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0")
-        self.model = "gemini-1.5-flash-latest"
+        # Si se proporciona una API key específica, usarla
+        if api_key and api_key.strip():
+            self.api_key = api_key
+        else:
+            # Usar el gestor de API keys para obtener una clave funcional
+            try:
+                self.api_key = get_working_api_key()
+            except ValueError as e:
+                print(f"⚠️ Advertencia: {e}")
+                # Fallback a la clave por defecto
+                self.api_key = os.getenv("GEMINI_API_KEY", "AIzaSyCrzdwv-viQnqcFnc7PBAimEzyDMf4dXY0")
+        
+        # Usar el modelo especificado (gemini-2.0-flash como en el ejemplo del usuario)
+        self.model = "gemini-2.0-flash"
         self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
         
         # Contexto base de LEAN BOT
@@ -66,10 +78,14 @@ Responde exclusivamente como LEAN BOT de acuerdo a esta información.
         Genera una respuesta usando Gemini API con el contexto de LEAN BOT
         """
         try:
-            # Usar la API key hardcodeada
+            # Verificar API key y obtener una funcional si es necesario
             current_api_key = self.api_key
             if not current_api_key:
-                return "Lo siento, no tengo configurada la conexión con el servicio de chat. Por favor, configura la API key."
+                try:
+                    current_api_key = get_working_api_key()
+                    self.api_key = current_api_key
+                except ValueError:
+                    return "Lo siento, no tengo configurada la conexión con el servicio de chat. Por favor, configura la API key."
             
             # Construir el prompt completo con contexto
             full_prompt = self.lean_context + "\n\n"
@@ -105,10 +121,15 @@ Responde exclusivamente como LEAN BOT de acuerdo a esta información.
                 }
             }
             
-            # Hacer la petición a Gemini API
+            # Hacer la petición a Gemini API con headers como en el ejemplo
+            headers = {
+                "Content-Type": "application/json",
+                "X-goog-api-key": current_api_key
+            }
+            
             response = requests.post(
-                f"{self.base_url}?key={current_api_key}",
-                headers={"Content-Type": "application/json"},
+                self.base_url,
+                headers=headers,
                 json=data,
                 timeout=30
             )

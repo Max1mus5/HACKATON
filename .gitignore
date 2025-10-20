@@ -1,6 +1,18 @@
 # Ignorar archivos de configuración con claves API
 js/config.js
 
+# Ignorar archivos de instrucciones internas (NO SUBIR)
+.github/instructions/
+*.instructions.md
+QUICK_START.md
+API_KEYS_IMPLEMENTATION.md
+
+# Ignorar base de datos local
+*.sqlite
+*.db
+database.sqlite
+leanbot.db
+
 # Ignorar archivos generados por el sistema operativo
 .DS_Store
 Thumbs.db
