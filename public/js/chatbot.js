@@ -95,7 +95,7 @@ async function showWelcomeMessage() {
         </div>
         <div class="message-content">
             <div class="message-text">
-                ¡Hola! 👋 Soy <strong>LEAN BOT</strong>, tu asistente virtual de <strong>INGE LEAN</strong>.<br><br>
+                ¡Hola! Soy <strong>LEAN BOT</strong>, tu asistente virtual de <strong>INGE LEAN</strong>.<br><br>
                 Estoy aquí para ayudarte con preguntas sobre nuestros servicios de consultoría en ingeniería, desarrollo de software y soluciones tecnológicas.<br><br>
                 <strong>¿En qué puedo ayudarte hoy?</strong>
             </div>
@@ -113,7 +113,6 @@ async function showWelcomeMessage() {
     );
     
     const randomQuestions = getRandomQuestions(validQuestions, 3);
-    const emojis = ['🤔', '💡', '❓'];
     
     // Mensaje con opciones
     const optionsMessage = document.createElement("div");
@@ -128,12 +127,12 @@ async function showWelcomeMessage() {
                 <div class="quick-options" id="welcome-options">
                     ${randomQuestions.map((q, index) => `
                         <button class="option-btn" data-question="${q.question}" data-number="${index + 1}">
-                            ${index + 1}. ${emojis[index]} ${q.question.replace(/^\d+\.\s*/, '')}
+                            ${index + 1}. ${q.question.replace(/^\d+\.\s*/, '')}
                         </button>
                     `).join('')}
                 </div>
                 <p style="margin-top: 15px; font-size: 0.9em; color: #666;">
-                    💬 También puedes escribir tu propia pregunta o simplemente escribir el número (1, 2, o 3)
+                    También puedes escribir tu propia pregunta o simplemente escribir el número (1, 2, o 3)
                 </p>
             </div>
             <div class="message-time">${new Date().toLocaleTimeString()}</div>
