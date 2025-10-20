@@ -22,7 +22,7 @@ class DashboardManager {
         // Verificar sesión
         const session = this.checkSession();
         if (!session) {
-            window.location.href = './login';
+            window.location.href = './login.html';
             return;
         }
         
@@ -313,6 +313,11 @@ class DashboardManager {
     navigateToChat() {
         // Add loading state
         const backButton = document.querySelector('.back-button');
+        if (!backButton) {
+            window.location.href = 'chat.html';
+            return;
+        }
+        
         const originalText = backButton.innerHTML;
         
         backButton.innerHTML = `
@@ -323,7 +328,7 @@ class DashboardManager {
         
         // Simulate navigation delay for smooth transition
         setTimeout(() => {
-            window.location.href = 'chat';
+            window.location.href = 'chat.html';
         }, 300);
     }
     
